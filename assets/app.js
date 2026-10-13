@@ -36,19 +36,32 @@
     return rows.sort((x, y) => y.w - x.w || y.pf - x.pf || (y.pf - y.pa) - (x.pf - x.pa) || x.t - y.t);
   }
   // Q = top 4 in every possible outcome of the remaining matches; E = cannot reach top 4.
+  // Ties on wins are split on points for. A player's points for can only grow, so a tie is
+  // treated as settled only when the player who is behind has no matches left.
+  const groupDone = f => MATCHES.every(m => m.f !== f || R[m.id]);
   function status(f) {
-    const base = {}; TEAMS.forEach(t => base[t] = 0);
+    const base = {}, pf = {}, left = {}; TEAMS.forEach(t => { base[t] = 0; pf[t] = 0; left[t] = 0 });
     const rem = [];
-    for (const m of MATCHES) { if (m.f !== f) continue; const r = R[m.id]; if (r) base[r[0] > r[1] ? m.a : m.b]++; else rem.push(m) }
+    for (const m of MATCHES) {
+      if (m.f !== f) continue; const r = R[m.id];
+      if (r) { base[r[0] > r[1] ? m.a : m.b]++; pf[m.a] += r[0]; pf[m.b] += r[1] } else { rem.push(m); left[m.a]++; left[m.b]++ }
+    }
     const thru = {}, out = {}; TEAMS.forEach(t => { thru[t] = true; out[t] = true });
     if (rem.length > 16) { TEAMS.forEach(t => { thru[t] = false; out[t] = false }) }
     else for (let mask = 0; mask < (1 << rem.length); mask++) {
       const w = { ...base };
       for (let i = 0; i < rem.length; i++) w[(mask >> i) & 1 ? rem[i].a : rem[i].b]++;
       for (const t of TEAMS) {
-        let ge = 0, gt = 0;
-        for (const o of TEAMS) { if (o === t) continue; if (w[o] >= w[t]) ge++; if (w[o] > w[t]) gt++ }
-        if (ge > 3) thru[t] = false; if (gt < 4) out[t] = false;
+        let maybeAhead = 0, surelyAhead = 0;
+        for (const o of TEAMS) {
+          if (o === t) continue;
+          if (w[o] > w[t]) { maybeAhead++; surelyAhead++; continue }
+          if (w[o] < w[t]) continue;
+          if (!(left[o] === 0 && pf[o] < pf[t])) maybeAhead++;          // o could still edge t on points
+          if (left[t] === 0 && pf[o] > pf[t]) surelyAhead++;            // t can no longer catch o
+        }
+        if (maybeAhead > 3) thru[t] = false;
+        if (surelyAhead < 4) out[t] = false;
       }
     }
     const s = {}; TEAMS.forEach(t => s[t] = thru[t] ? "in" : out[t] ? "out" : ""); return s;
@@ -100,11 +113,11 @@
     let ties, title;
     const fam = f.replace(/\d$/, ""), hasPair = /\d$/.test(f) && EVENTS.some(e => e.k === fam + "1") && EVENTS.some(e => e.k === fam + "2");
     if (!hasPair) {
-      const tb = table(f); title = "Semifinal draw (projected)";
+      const tb = table(f); title = groupDone(f) ? "Semifinal draw" : "Semifinal draw (projected)";
       ties = [["SF1", f, tb[0].t, 1, f, tb[3].t, 4], ["SF2", f, tb[1].t, 2, f, tb[2].t, 3]];
     } else {
       const f1 = fam + "1", f2 = fam + "2", t1 = table(f1), t2 = table(f2);
-      title = `${evName(f1).replace(/\s*1$/, "")} quarterfinal draw (projected)`;
+      title = `${evName(f1).replace(/\s*1$/, "")} quarterfinal draw${groupDone(f1) && groupDone(f2) ? "" : " (projected)"}`;
       ties = [0, 1, 2, 3].map(i => ["QF" + (i + 1), f1, t1[i].t, i + 1, f2, t2[3 - i].t, 4 - i]);
     }
     $("brTitle").textContent = title;
