@@ -27,5 +27,33 @@
  "tv_seconds": 12,
  "name_fixes": {
   "Ali Akbar": "Ali Akber"
- }
+ },
+ "today": {
+  "date": "2026-10-13",
+  "lunch": [
+   79,
+   31,
+   41,
+   96,
+   65,
+   57
+  ],
+  "evening": [
+   20,
+   38,
+   42,
+   48,
+   49,
+   68,
+   71,
+   72,
+   80,
+   86,
+   95
+  ],
+  "knockout": [
+   "Mixed Doubles|Semifinal 1"
+  ]
+ },
+ "tv_spot_seconds": 8
 }

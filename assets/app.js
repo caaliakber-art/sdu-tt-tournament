@@ -200,7 +200,7 @@
         const pos = tables[e.k].findIndex(r => r.t === t) + 1, row = tables[e.k][pos - 1];
         return `<tr><td class="ev">${esc(e.k)}</td><td class="l">${esc(nm(e.k, t))}</td><td>${row.p ? ord(pos) : "–"}</td><td>${row.w}-${row.l}</td></tr>`;
       }).join("");
-      return `<div class="card tcard" style="--tc:var(--t${t})"><div class="thead">${teamBlock(t, "lg")}<div class="rank">${ord(trank[t])}<small>${tpts[t]} pts</small></div></div>
+      return `<div class="card tcard ${i < 3 ? "half1" : "half2"}" style="--tc:var(--t${t})"><div class="thead">${teamBlock(t, "lg")}<div class="rank">${ord(trank[t])}<small>${tpts[t]} pts</small></div></div>
         <div class="tstats">${played[t]} played · ${wins[t]} won · ${tpts[t]} pts</div>
         <div class="tablewrap"><table><thead><tr><th class="l">Event</th><th class="l">Player / Pair</th><th>Pos</th><th>W-L</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
     }).join("");
@@ -260,7 +260,7 @@
     let v = location.hash.replace("#", "");
     if (v === "tv") { setTv(true); v = "home" }
     if (!VIEWS.includes(v)) v = "home";
-    VIEWS.forEach(x => $("view-" + x).hidden = x !== v);
+    VIEWS.forEach(x => $("view-" + x).hidden = x !== v); $("view-today").hidden = true;
     document.querySelectorAll(".nav a").forEach(a => { if (a.dataset.view === v) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current") });
   }
   function renderAll() { if (!FX) return; renderHeader(); renderTop(); renderEvent(); renderTeams(); renderPhotos(); renderAvailability() }
@@ -268,35 +268,76 @@
   /* TV slideshow: overview, then each event (group table + knockout), then the team cards. */
   let wake = null, tvSlide = -1, tvDur = 12000;
   const isTv = () => document.documentElement.classList.contains("tv");
-  const slides = () => [{ k: "overview", label: "Team standings and results" }, ...(spotlight() ? [{ k: "spot", label: "Spotlight" }] : []), ...EVENTS.map(e => ({ k: "event", ev: e.k, label: e.n })), { k: "teams", label: "Teams" }];
+  // Today's session lists (data/config.json "today"): every listed match with a score gets its own winner moment.
+  const todayCfg = () => CFG.today || {};
+  const todayLabel = () => { const d = new Date((todayCfg().date || "") + "T00:00:00"); return isNaN(d) ? "Today" : `${d.getDate()} ${MON[d.getMonth()]}` };
+  function todayMoments() {
+    const t = todayCfg(), out = [];
+    const koKey = k => `${k.format}|${k.round}`;
+    [...(t.lunch || []), ...(t.evening || [])].forEach(id => { const m = MATCHES.find(x => x.id === Number(id)); if (m && R[m.id]) out.push(leagueMoment(m)) });
+    (t.knockout || []).forEach(key => { const k = KO.find(x => koKey(x) === key && x.winner); if (k) out.unshift(koMoment(k)) });
+    return out;
+  }
+  function todayPending() {
+    const t = todayCfg(), pick = ids => (ids || []).map(id => MATCHES.find(x => x.id === Number(id))).filter(m => m && !R[m.id]);
+    return { lunch: pick(t.lunch), evening: pick(t.evening) };
+  }
+  function slides() {
+    const list = [{ k: "overview", label: "Team standings and results" }];
+    const tm = todayMoments();
+    if (tm.length) tm.forEach((m, i) => list.push({ k: "spot", m, label: `Results · ${todayLabel()} · ${i + 1} of ${tm.length}` }));
+    else { const m = spotlight(); if (m) list.push({ k: "spot", m, label: "Spotlight" }) }
+    const tp = todayPending(); if (tp.lunch.length + tp.evening.length) list.push({ k: "today", label: `Still to play · ${todayLabel()}` });
+    EVENTS.forEach(e => list.push({ k: "event", ev: e.k, label: e.n }));
+    list.push({ k: "teams", part: 1, label: "Teams · 1 of 2" }, { k: "teams", part: 2, label: "Teams · 2 of 2" });
+    return list;
+  }
+  const slideDur = s => s && s.k === "spot" ? Math.max(4, Number(CFG.tv_spot_seconds) || 8) * 1000 : tvDur;
+  // Shrink the slide to fit the screen whatever the TV's resolution or browser bars.
+  function fitSlide() {
+    const main = document.querySelector("main"); main.style.zoom = "";
+    if (!isTv() || document.documentElement.dataset.slide === "spot") return;
+    const head = document.querySelector("header.band").getBoundingClientRect().height, bar = document.querySelector(".tvbar").getBoundingClientRect().height || 64;
+    const avail = innerHeight - head - bar - 8, need = main.scrollHeight;
+    if (need > avail) main.style.zoom = Math.max(.55, avail / need).toFixed(3);
+  }
+  function renderToday() {
+    const tp = todayPending(), sec = (title, ms) => ms.length ? `<div><h3 class="sec">${title}</h3><ul class="list">${ms.map(m => `<li><span class="meta"><span class="tag">${esc(m.f)}</span>${esc(evName(m.f))}</span>${pairLine(m, null)}</li>`).join("")}</ul></div>` : "";
+    $("todayTitle").textContent = `Still to play · ${todayLabel()}`;
+    $("todaySub").textContent = `${tp.lunch.length + tp.evening.length} matches`;
+    $("todayList").innerHTML = sec("Lunch break", tp.lunch) + sec("Post office hours", tp.evening);
+  }
   function showSlide(i) {
     if (!EVENTS.length) return;
     const list = slides(); tvSlide = ((i % list.length) + list.length) % list.length; const s = list[tvSlide];
     document.documentElement.dataset.slide = s.k;
     const mainEl = document.querySelector("main"); mainEl.classList.remove("enter"); void mainEl.offsetWidth; mainEl.classList.add("enter");
-    VIEWS.forEach(x => $("view-" + x).hidden = x !== (s.k === "teams" ? "teams" : "home"));
+    const view = s.k === "teams" ? "teams" : s.k === "today" ? "today" : "home";
+    VIEWS.forEach(x => $("view-" + x).hidden = x !== view); $("view-today").hidden = view !== "today";
+    document.documentElement.dataset.part = s.part || "";
     if (s.k === "event") { curEv = s.ev; renderEvent() }
-    if (s.k === "spot") { const m = spotlight(); if (m) showMoment(m, true) } else if (spotOn && !celBusy) hideMoment();
+    if (s.k === "today") renderToday();
+    if (s.k === "spot") showMoment(s.m, true); else if (spotOn && !celBusy) hideMoment();
     $("tvLabel").textContent = s.label;
     $("tvDots").innerHTML = list.map((_, j) => `<i class="${j === tvSlide ? "on" : ""}"></i>`).join("");
-    const bar = $("tvProg"); bar.style.animation = "none"; void bar.offsetWidth; bar.style.animation = `tvprog ${tvDur}ms linear forwards`;
-    window.scrollTo(0, 0);
+    const bar = $("tvProg"); bar.style.animation = "none"; void bar.offsetWidth; bar.style.animation = `tvprog ${slideDur(s)}ms linear forwards`;
+    window.scrollTo(0, 0); requestAnimationFrame(fitSlide);
   }
-  function tvTick() { showSlide(tvSlide + 1) }
-  function tvRestart() { clearInterval(tvTimer); tvTimer = setInterval(tvTick, tvDur) }
+  function tvTick() { showSlide(tvSlide + 1); tvRestart() }
+  function tvRestart() { clearTimeout(tvTimer); const s = slides()[tvSlide]; tvTimer = setTimeout(tvTick, slideDur(s)) }
   async function setTv(on) {
     document.documentElement.classList.toggle("tv", on);
     $("tvBtn").textContent = on ? "Exit TV mode" : "TV mode";
-    clearInterval(tvTimer);
+    clearTimeout(tvTimer);
     if (on) {
       tvDur = Math.max(5, Number(CFG.tv_seconds) || 12) * 1000;
-      tvSlide = -1; tvTick(); tvRestart();
+      tvSlide = -1; tvTick();
       try { await document.documentElement.requestFullscreen() } catch (_) {}
       try { wake = await navigator.wakeLock.request("screen") } catch (_) {}
     } else {
       try { if (document.fullscreenElement) await document.exitFullscreen() } catch (_) {}
       try { wake && wake.release() } catch (_) {}
-      delete document.documentElement.dataset.slide; tvSlide = -1;
+      delete document.documentElement.dataset.slide; tvSlide = -1; document.querySelector("main").style.zoom = ""; if (spotOn) hideMoment();
       if (location.hash === "#tv") history.replaceState(null, "", "#home");
       route();
     }
@@ -390,7 +431,7 @@
   }
   function nextCel() {
     const m = celQueue.shift(); if (!m) { celBusy = false; hideMoment(); return }
-    celBusy = true; clearInterval(tvTimer);                  // pause the slideshow while celebrating
+    celBusy = true; clearTimeout(tvTimer);                   // pause the slideshow while celebrating
     showMoment(m, false);
     setTimeout(() => { if (!celQueue.length) { celBusy = false; hideMoment(); if (isTv()) { showSlide(tvSlide); tvRestart() } } else nextCel() }, m.big ? 10000 : 7000);
   }
@@ -414,7 +455,7 @@
       if (first || res.updated !== lastUpdated) renderAll();
       const moments = newKo.map(koMoment).concat(newIds.map(id => MATCHES.find(x => String(x.id) === id)).filter(Boolean).map(leagueMoment));
       if (moments.length) celebrate(moments);
-      if (isTv()) { if (first) tvDur = Math.max(5, Number(CFG.tv_seconds) || 12) * 1000; if (tvSlide < 0) { showSlide(0); tvRestart() } }
+      if (isTv()) { if (first) tvDur = Math.max(5, Number(CFG.tv_seconds) || 12) * 1000; if (tvSlide < 0) { showSlide(0); tvRestart() } else requestAnimationFrame(fitSlide) }
       lastUpdated = res.updated;
     } catch (e) {
       $("live").classList.add("off");
@@ -439,8 +480,10 @@
     if (e.key === "Escape") setTv(false);
     else if (e.key === "ArrowRight") { showSlide(tvSlide + 1); tvRestart() }
     else if (e.key === "ArrowLeft") { showSlide(tvSlide - 1); tvRestart() }
+    else if (e.key === "ArrowUp" || e.key === "ArrowDown") return;
   });
   window.addEventListener("hashchange", route);
+  window.addEventListener("resize", () => { if (isTv()) fitSlide() });
 
   route();
   refresh(true).then(() => {

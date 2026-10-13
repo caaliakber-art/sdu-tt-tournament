@@ -53,6 +53,17 @@ Everyone in the channel sees the live page without signing in to anything new. F
 Open the site address ending in `#tv` (for example `https://caaliakber-art.github.io/sdu-tt-tournament/#tv`) on the TV's browser, a laptop connected by HDMI, or a casting stick, and make the browser full screen (F11 on a laptop).
 It loops by itself: team standings and recent results, then each of the 7 events (group table and knockout draw), then the team cards. Each slide shows for 12 seconds (`tv_seconds` in `data/config.json`). New scores appear within a minute. Arrow keys skip slides; Esc exits. When a new score arrives the TV shows a short result banner with confetti, and a final win gets a Champion banner. Click **Chime off** once before entering TV mode to turn on a soft chime for new results (off by default).
 
+### Today's matches (celebrations on the TV)
+
+Each morning, copy the coordinator's lunch and post-office-hours lists into `today` in `data/config.json` as match numbers (row order in the scorecard):
+
+```json
+"today": { "date": "2026-10-13", "lunch": [79, 31, 41, 96, 65, 57], "evening": [20, 38, 42, 48, 49, 68, 71, 72, 80, 86, 95],
+           "knockout": ["Mixed Doubles|Semifinal 1"] }
+```
+
+On the TV, every listed match that has a score gets its own winner celebration (8 seconds each, `tv_spot_seconds`), and a "Still to play" slide lists the rest by session. As soon as the next scorecard upload adds a score, that match joins the celebrations automatically.
+
 ### Optional: photos tab (OneDrive or SharePoint)
 
 The Photos tab stays hidden until a link is set. To turn it on:

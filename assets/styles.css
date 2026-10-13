@@ -254,10 +254,13 @@ tr.lead td:first-child{box-shadow:inset 4px 0 0 var(--salmon)}
 .tv body{font-size:20px;cursor:none;padding-bottom:64px}
 .tv .notv,.tv .sdufoot,.tv .ghostbtn{display:none!important}
 .tv .wrap{max-width:1760px}
-.tv .topline{padding-block:10px 0}
-.tv .brand{padding-block:4px 12px}
-.tv .brand h1{font-size:44px}
-.tv .logo{height:50px}
+/* compact one-line header on the TV so slides keep the screen */
+.tv .topline{padding-block:8px 0}
+.tv .brand{padding-block:2px 10px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px}
+.tv .brand h1{font-size:38px;margin:0;order:-1}
+.tv .brand p{margin:0;font-size:16px}
+.tv .brand .progress{display:none}
+.tv .logo{height:42px}
 .tv main.wrap{padding-block:18px 18px;gap:18px}
 .tv table{font-size:22px}
 .tv td.rk{font-size:26px}
@@ -280,12 +283,18 @@ tr.lead td:first-child{box-shadow:inset 4px 0 0 var(--salmon)}
 .tv[data-slide="event"] #brTitle{grid-column:2;grid-row:2;padding:0 18px 0 0;margin-top:0;align-self:start}
 .tv[data-slide="event"] #bracket{grid-column:2;grid-row:3;padding:4px 18px 18px 0;align-content:start;grid-template-columns:repeat(2,minmax(0,1fr))}
 .tv .tie{font-size:18px}
-/* teams slide */
+/* teams slides: three cards per slide, large enough to read across the room */
+.tv[data-part="1"] .tcard.half2,.tv[data-part="2"] .tcard.half1{display:none}
+.tv .teamgrid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+/* still-to-play slide */
+.todaygrid{display:grid;gap:8px 32px;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));padding:0 18px 18px}
+.tv .todaygrid .list li{font-size:22px}
+/* old teams slide rules */
 .tv #view-teams .intro p{display:none}
 .tv .teamgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 .tv .tcard .thead{padding:12px 16px 10px}
-.tv .tcard table{font-size:17px}
-.tv .tcard table td{padding:5px 6px}
+.tv .tcard table{font-size:20px}
+.tv .tcard table td{padding:8px 8px}
 .tv .tcard table th{padding:5px 6px}
 .tv .toast{font-size:26px;padding:18px 28px;bottom:84px}
 .tv .leadtag{font-size:14px}
