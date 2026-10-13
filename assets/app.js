@@ -364,11 +364,11 @@
   const TEAMCOL = t => getComputedStyle(document.documentElement).getPropertyValue(`--t${t}`).trim() || "#00F6ED";
   function leagueMoment(m) {
     const r = R[m.id], w = r[0] > r[1] ? m.a : m.b, l = w === m.a ? m.b : m.a;
-    return { kick: "Winner", tag: `${evName(m.f)} · ${dayTxt(m.day)}`, name: nm(m.f, w), team: w, loser: nm(m.f, l), sa: Math.max(...r), sb: Math.min(...r), sets: "", big: false };
+    return { kick: "Winner", tag: `${evName(m.f)} · ${dayTxt(m.day)}`, name: nm(m.f, w), team: w, loser: nm(m.f, l), loserTeam: l, sa: Math.max(...r), sb: Math.min(...r), sets: "", big: false };
   }
   function koMoment(k) {
     const w = k.winner, final = /^final/i.test(k.round);
-    return { kick: final ? "Champions" : `${k.round} winner`, tag: `${k.format} · ${k.round}`, name: w === 1 ? k.c1 : k.c2, team: w === 1 ? k.t1 : k.t2, loser: w === 1 ? k.c2 : k.c1,
+    return { kick: final ? "Champions" : `${k.round} winner`, tag: `${k.format} · ${k.round}`, name: w === 1 ? k.c1 : k.c2, team: w === 1 ? k.t1 : k.t2, loser: w === 1 ? k.c2 : k.c1, loserTeam: w === 1 ? k.t2 : k.t1,
       sa: w === 1 ? k.w1 : k.w2, sb: w === 1 ? k.w2 : k.w1, sets: k.sets.map(p => w === 1 ? `${p[0]}-${p[1]}` : `${p[1]}-${p[0]}`).join("  ·  "),
       setList: k.sets.map(p => w === 1 ? p : [p[1], p[0]]), big: final };
   }
@@ -446,6 +446,22 @@
       i++; setTimeout(next, i === list.length - 1 ? 1300 : 1000);
     })();
   }
+  // Captain caricatures (data/config.json "team_art"): the winning team's captain celebrates on the left,
+  // the losing team's captain sulks on the right.
+  const art = (t, side) => { const a = CFG.team_art && CFG.team_art[t]; return (a && a[side]) || "" };
+  function setArt(id, t, side) {
+    const fig = $(id), src = t ? art(t, side) : "";
+    fig.hidden = !src; if (!src) return false;
+    fig.style.setProperty("--ac", TEAMCOL(t));
+    const img = fig.querySelector("img"); if (img.getAttribute("src") !== src) img.src = src;
+    fig.querySelector("figcaption").innerHTML = `<i></i>${esc(teamName(t))}${captain(t) ? ` · ${esc(captain(t))}` : ""}`;
+    return true;
+  }
+  let artLoaded = "";
+  function preloadArt() {
+    const list = Object.values(CFG.team_art || {}).flatMap(a => [a.win, a.loss]).filter(Boolean), key = list.join();
+    if (key === artLoaded) return; artLoaded = key; list.forEach(src => { const i = new Image(); i.src = src });
+  }
   let spotOn = false;
   function showMoment(m, asSlide) {
     const run = ++momentRun, el = $("celebrate"); spotOn = !!asSlide; fxRun++;
@@ -457,6 +473,8 @@
     $("celSets").innerHTML = "";
     $("celVs").textContent = m.loser && !/^tbd$/i.test(m.loser) ? `beat ${m.loser}` : "";
     $("celTeam").innerHTML = m.team ? teamBlock(m.team, "cel", true) : "";
+    const hasArt = setArt("celWin", m.team, "win") | setArt("celLoss", m.loserTeam, "loss");
+    el.classList.toggle("art", !!hasArt);
     el.classList.toggle("big", !!m.big); el.classList.toggle("slide", !!asSlide);
     el.classList.remove("show", "slammed"); el.hidden = false; void el.offsetWidth; el.classList.add("show");
     const slam = () => {
@@ -495,6 +513,7 @@
       const newKo = first ? [] : ((ko && ko.ties) || []).filter(k => k.winner && !prevKo.has(koKey(k)));
       FX = fx; RES = res; CFG = cfg || {};
       EVENTS = fx.events; ROSTER = fx.roster; MATCHES = fx.matches; R = res.results || {}; KO = (ko && ko.ties) || [];
+      preloadArt();
       if (CFG.tournament) { $("title").textContent = CFG.tournament; document.title = CFG.tournament + " | SDU" }
       $("live").classList.remove("off");
       newIds.forEach(id => fresh.set(String(id), Date.now()));
@@ -519,8 +538,8 @@
   $("tvBtn").onclick = () => setTv(!document.documentElement.classList.contains("tv"));
   setChimeBtn();
   $("chimeBtn").onclick = () => { chimeOn = !chimeOn; store.set("tt_chime", chimeOn ? "1" : "0"); setChimeBtn(); if (chimeOn) chime(false) };
-  window.ttDemo = big => celebrate([big ? { kick: "Champions", tag: "Mixed Doubles · Final", name: "Sample Pair + Winners", team: 3, loser: "Sample Runners-up", sa: 2, sb: 1, sets: "15-12  ·  13-15  ·  15-11", big: true }
-                                          : { kick: "Winner", tag: "Men's Doubles 1 · Day 8", name: "Sample Pair + Winners", team: 4, loser: "Sample Opponents", sa: 21, sb: 18, sets: "", big: false }]);
+  window.ttDemo = big => celebrate([big ? { kick: "Champions", tag: "Mixed Doubles · Final", name: "Sample Pair + Winners", team: 3, loserTeam: 6, loser: "Sample Runners-up", sa: 2, sb: 1, sets: "15-12  ·  13-15  ·  15-11", big: true }
+                                          : { kick: "Winner", tag: "Men's Doubles 1 · Day 8", name: "Sample Pair + Winners", team: 4, loserTeam: 2, loser: "Sample Opponents", sa: 21, sb: 18, sets: "", big: false }]);
   document.addEventListener("keydown", e => {
     if (!isTv()) return;
     if (e.key === "Escape") setTv(false);

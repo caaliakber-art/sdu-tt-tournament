@@ -55,5 +55,31 @@
    "Mixed Doubles|Semifinal 1"
   ]
  },
- "tv_spot_seconds": 11
+ "tv_spot_seconds": 11,
+ "team_art": {
+  "1": {
+   "win": "assets/art/neha-win.webp",
+   "loss": "assets/art/neha-loss.webp"
+  },
+  "2": {
+   "win": "assets/art/karthik-win.webp",
+   "loss": "assets/art/karthik-loss.webp"
+  },
+  "3": {
+   "win": "assets/art/mamta-win.webp",
+   "loss": "assets/art/mamta-loss.webp"
+  },
+  "4": {
+   "win": "assets/art/naman-win.webp",
+   "loss": "assets/art/naman-loss.webp"
+  },
+  "5": {
+   "win": "assets/art/shravanth-win.webp",
+   "loss": "assets/art/shravanth-loss.webp"
+  },
+  "6": {
+   "win": "assets/art/bhuvanesh-win.webp",
+   "loss": "assets/art/bhuvanesh-loss.webp"
+  }
+ }
 }

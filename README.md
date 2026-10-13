@@ -64,6 +64,8 @@ Each morning, copy the coordinator's lunch and post-office-hours lists into `tod
 
 On the TV, every listed match that has a score gets its own winner celebration (11 seconds each, `tv_spot_seconds`; the score plays out point by point, knockouts set by set), and a "Still to play" slide lists the rest by session. As soon as the next scorecard upload adds a score, that match joins the celebrations automatically.
 
+Each celebration also shows the captains' caricatures: the winning team's captain cheering on the left, the losing team's captain sulking on the right. The images live in `assets/art` and are listed per team under `team_art` in `data/config.json`. To change or remove one, edit or delete that team's entry.
+
 ### Optional: photos tab (OneDrive or SharePoint)
 
 The Photos tab stays hidden until a link is set. To turn it on:
@@ -88,7 +90,7 @@ Edit `data/config.json` on GitHub (open the file, click the pencil icon, edit, *
 
 ## 3. Privacy
 
-This repository and site are public. They contain player names, teams, fixtures and scores only. Do not upload photos or personal contact details other than the coordinator's work email to this repository.
+This repository and site are public. They contain player names, teams, fixtures, scores and the six captains' caricatures (`assets/art`). Keep each caricature only with that captain's agreement. Do not upload other photos, or personal contact details other than the coordinator's work email, to this repository.
 
 ## 4. How it is built
 
