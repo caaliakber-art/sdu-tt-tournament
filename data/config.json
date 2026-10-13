@@ -17,12 +17,12 @@
  "day_dates": {},
  "refresh_seconds": 60,
  "captains": {
-  "1": "",
-  "2": "",
-  "3": "",
-  "4": "",
-  "5": "",
-  "6": ""
+  "1": "Neha Sameer",
+  "2": "Karthik",
+  "3": "Mamta",
+  "4": "Naman",
+  "5": "Shravanth",
+  "6": "Bhuvanesh"
  },
  "tv_seconds": 12,
  "name_fixes": {
