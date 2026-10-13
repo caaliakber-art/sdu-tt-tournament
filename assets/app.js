@@ -292,7 +292,7 @@
     list.push({ k: "teams", part: 1, label: "Teams · 1 of 2" }, { k: "teams", part: 2, label: "Teams · 2 of 2" });
     return list;
   }
-  const slideDur = s => s && s.k === "spot" ? Math.max(4, Number(CFG.tv_spot_seconds) || 8) * 1000 : tvDur;
+  const slideDur = s => s && s.k === "spot" ? Math.max(6, Number(CFG.tv_spot_seconds) || 11) * 1000 : tvDur;
   // Shrink the slide to fit the screen whatever the TV's resolution or browser bars.
   function fitSlide() {
     const main = document.querySelector("main"); main.style.zoom = "";
@@ -369,7 +369,8 @@
   function koMoment(k) {
     const w = k.winner, final = /^final/i.test(k.round);
     return { kick: final ? "Champions" : `${k.round} winner`, tag: `${k.format} · ${k.round}`, name: w === 1 ? k.c1 : k.c2, team: w === 1 ? k.t1 : k.t2, loser: w === 1 ? k.c2 : k.c1,
-      sa: w === 1 ? k.w1 : k.w2, sb: w === 1 ? k.w2 : k.w1, sets: k.sets.map(p => w === 1 ? `${p[0]}-${p[1]}` : `${p[1]}-${p[0]}`).join("  ·  "), big: final };
+      sa: w === 1 ? k.w1 : k.w2, sb: w === 1 ? k.w2 : k.w1, sets: k.sets.map(p => w === 1 ? `${p[0]}-${p[1]}` : `${p[1]}-${p[0]}`).join("  ·  "),
+      setList: k.sets.map(p => w === 1 ? p : [p[1], p[0]]), big: final };
   }
   // Spotlight on the TV: the latest champion, else the latest knockout winner, else the newest league result.
   function spotlight() {
@@ -401,28 +402,73 @@
       requestAnimationFrame(frame);
     })(t0);
   }
-  function countUp(el, to, ms) {
-    if (to == null || to === "") { el.textContent = ""; return }
-    if (reduceMotion()) { el.textContent = to; return }
-    const t0 = performance.now();
-    (function f(t) { const k = Math.min(1, (t - t0) / ms); el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(f) })(t0);
+  /* The winner moment plays like a match:
+     1) card + name   2) the rally: both scores climb point by point, slowing at the end (knockouts land set by set)
+     3) the winning point slams in: flash, shockwave, confetti   4) "beat ...", team and captain rise in. */
+  let momentRun = 0;
+  const later = (run, ms, fn) => setTimeout(() => { if (run === momentRun) fn() }, ms);
+  function tick(win) {
+    if (!chimeOn) return;
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime;
+      o.type = "triangle"; o.frequency.value = win ? 1320 : 990;
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(win ? 0.05 : 0.025, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+      o.connect(g).connect(audio.destination); o.start(t); o.stop(t + 0.1);
+    } catch (_) {}
+  }
+  // Point-by-point rally: winner's and loser's numbers rise together; the loser stops at their score.
+  function rally(run, sa, sb, done) {
+    const A = $("celA"), B = $("celB"), top = Math.max(sa, sb);
+    let i = 0;
+    (function step() {
+      if (run !== momentRun) return;
+      i++; A.textContent = Math.min(i, sa); B.textContent = Math.min(i, sb);
+      const left = top - i;
+      if (left <= 0) { done(); return }
+      tick(i <= sa && i > sb);
+      // steady at first, then each of the last five points slows down for tension
+      const wait = left > 5 ? 95 : [520, 420, 320, 230, 160][left - 1];
+      setTimeout(step, wait);
+    })();
+  }
+  // Knockout: each set lands in turn and the sets-won tally moves.
+  function setsReveal(run, list, done) {
+    const A = $("celA"), B = $("celB"), box = $("celSets");
+    box.innerHTML = list.map(p => `<span class="set ${p[0] > p[1] ? "w" : "l"}">${p[0]}-${p[1]}</span>`).join("");
+    const pills = [...box.children]; let a = 0, b = 0, i = 0;
+    (function next() {
+      if (run !== momentRun) return;
+      if (i >= list.length) { done(); return }
+      const p = list[i]; pills[i].classList.add("in");
+      if (p[0] > p[1]) a++; else b++;
+      A.textContent = a; B.textContent = b; tick(p[0] > p[1]);
+      i++; setTimeout(next, i === list.length - 1 ? 1300 : 1000);
+    })();
   }
   let spotOn = false;
   function showMoment(m, asSlide) {
-    const el = $("celebrate"); spotOn = !!asSlide;
+    const run = ++momentRun, el = $("celebrate"); spotOn = !!asSlide; fxRun++;
     el.style.setProperty("--wc", TEAMCOL(m.team));
     $("celKick").textContent = m.kick; $("celTag").textContent = m.tag;
     $("celTrophy").hidden = !m.big;
-    $("celName").innerHTML = m.name.split(" ").map((w, i) => `<span style="animation-delay:${.25 + i * .09}s">${esc(w)}</span>`).join(" ");
-    countUp($("celA"), m.sa, 1100); countUp($("celB"), m.sb, 1100);
-    $("celSets").textContent = m.sets || "";
+    $("celName").innerHTML = m.name.split(" ").map((w, i) => `<span style="animation-delay:${.3 + i * .12}s">${esc(w)}</span>`).join(" ");
+    $("celA").textContent = "0"; $("celB").textContent = "0";
+    $("celSets").innerHTML = "";
     $("celVs").textContent = m.loser && !/^tbd$/i.test(m.loser) ? `beat ${m.loser}` : "";
     $("celTeam").innerHTML = m.team ? teamBlock(m.team, "cel", true) : "";
     el.classList.toggle("big", !!m.big); el.classList.toggle("slide", !!asSlide);
-    el.hidden = false; el.classList.remove("show"); void el.offsetWidth; el.classList.add("show");
-    burst(m.big, TEAMCOL(m.team));
+    el.classList.remove("show", "slammed"); el.hidden = false; void el.offsetWidth; el.classList.add("show");
+    const slam = () => {
+      $("celA").textContent = m.sa; $("celB").textContent = m.sb;
+      el.classList.add("slammed"); chime(m.big);
+      burst(m.big, TEAMCOL(m.team));
+    };
+    if (reduceMotion()) { if (m.setList) $("celSets").innerHTML = m.setList.map(p => `<span class="set in ${p[0] > p[1] ? "w" : "l"}">${p[0]}-${p[1]}</span>`).join(""); slam(); return }
+    const hasSets = m.setList && m.setList.length;
+    later(run, 1300, () => hasSets ? setsReveal(run, m.setList, slam) : (m.sa != null ? rally(run, m.sa, m.sb, slam) : slam()));
   }
-  function hideMoment() { spotOn = false; fxRun++; $("celebrate").hidden = true }
+  function hideMoment() { spotOn = false; fxRun++; momentRun++; $("celebrate").hidden = true }
   let celQueue = [], celBusy = false;
   function celebrate(list) {
     chime(list.some(x => x.big));
@@ -433,7 +479,7 @@
     const m = celQueue.shift(); if (!m) { celBusy = false; hideMoment(); return }
     celBusy = true; clearTimeout(tvTimer);                   // pause the slideshow while celebrating
     showMoment(m, false);
-    setTimeout(() => { if (!celQueue.length) { celBusy = false; hideMoment(); if (isTv()) { showSlide(tvSlide); tvRestart() } } else nextCel() }, m.big ? 10000 : 7000);
+    setTimeout(() => { if (!celQueue.length) { celBusy = false; hideMoment(); if (isTv()) { showSlide(tvSlide); tvRestart() } } else nextCel() }, m.big ? 13000 : 11000);
   }
 
   let toastT = null;

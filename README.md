@@ -62,7 +62,7 @@ Each morning, copy the coordinator's lunch and post-office-hours lists into `tod
            "knockout": ["Mixed Doubles|Semifinal 1"] }
 ```
 
-On the TV, every listed match that has a score gets its own winner celebration (8 seconds each, `tv_spot_seconds`), and a "Still to play" slide lists the rest by session. As soon as the next scorecard upload adds a score, that match joins the celebrations automatically.
+On the TV, every listed match that has a score gets its own winner celebration (11 seconds each, `tv_spot_seconds`; the score plays out point by point, knockouts set by set), and a "Still to play" slide lists the rest by session. As soon as the next scorecard upload adds a score, that match joins the celebrations automatically.
 
 ### Optional: photos tab (OneDrive or SharePoint)
 
