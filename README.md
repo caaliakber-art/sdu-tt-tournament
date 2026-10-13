@@ -6,10 +6,9 @@ Website for the Singhvi Dev & Unni LLP office table tennis tournament. It has fo
 |---|---|---|
 | **Home** | Team standings, recent results, next matches, group standings per event, projected knockout draw | `scores/Score_Card.xlsx` |
 | **Teams** | Each team's players by event, with group position and win-loss | `scores/Score_Card.xlsx` and `data/config.json` |
-| **Photos** | Buttons to upload photos and open the shared album | OneDrive links in `data/config.json` |
-| **Availability** | Each player's remaining matches, a link to the availability form, coordinator contact | `scores/Score_Card.xlsx` and `data/config.json` |
+| **Availability** | Each player's remaining matches and results, and how to reach the coordinator on Teams | `scores/Score_Card.xlsx` and `data/config.json` |
 
-Photos and availability answers are never stored on this site. They stay in Microsoft 365 behind SDU sign-in; the site only links to them.
+An optional **Photos** tab appears automatically once a OneDrive link is added to `data/config.json` (see section 2).
 
 The site checks for new scores every minute, so a TV or an open Teams tab updates by itself.
 
@@ -42,33 +41,21 @@ The site address is `https://caaliakber-art.github.io/sdu-tt-tournament/`.
 In the tournament channel, click **+** (Add a tab) > **Website**, name it `TT Tournament`, paste the site address, Save.
 Everyone in the channel sees the live page without signing in to anything new. For the office TV, open the site in a browser and press **TV mode**, or open the address ending in `#tv`.
 
-### Availability form (Microsoft Forms)
+### Optional: photos tab (OneDrive or SharePoint)
 
-1. Go to forms.office.com and create a form called **TT Tournament: my availability** with:
-   - Your name (text)
-   - Event (choice: Women's Singles, Women's Doubles, Mixed Doubles, Men's Singles 1, Men's Singles 2, Men's Doubles 1, Men's Doubles 2)
-   - Days you can play (multiple choice: Day 1 to Day 8)
-   - Session (multiple choice: Lunch break, Post office hours)
-   - Anything else (text, optional)
-2. Settings: **Only people in my organisation can respond**, and tick **Record name**.
-3. Click **Collect responses**, copy the link, and paste it into `availability_form_url` in `data/config.json`.
-
-Responses land in an Excel file in the coordinator's OneDrive.
-
-### Photo upload and album (OneDrive or SharePoint)
+The Photos tab stays hidden until a link is set. To turn it on:
 
 1. In OneDrive (or the Teams channel's Files tab), create a folder **TT Tournament 2026 Photos**.
-2. Upload link: right-click the folder > **Request files** > copy the link into `photos_upload_url`. People can add photos without seeing or changing anyone else's.
+2. Upload link: right-click the folder > **Request files** > copy the link into `photos_upload_url`.
 3. Album link: right-click the folder > **Share** > **People in Singhvi Dev & Unni LLP** > copy the link into `photos_album_url`.
 
-### Coordinator, team names and captains
+### Coordinator, team names and match dates
 
 Edit `data/config.json` on GitHub (open the file, click the pencil icon, edit, **Commit changes**):
 
 ```json
-"coordinator": { "name": "Full name", "email": "name@sdu.works" },
+"coordinator": { "name": "Akshith Tholakapalli", "email": "akshiththolakpalli@sdu.works" },
 "team_names":  { "1": "Team 1", ... },
-"captains":    { "1": "Captain name", ... },
 "day_dates":   { "1": "2026-10-05", "2": "2026-10-06" }
 ```
 

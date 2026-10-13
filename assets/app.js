@@ -133,10 +133,14 @@
   }
 
   /* ---------- PHOTOS ---------- */
+  // Photos tab appears only once an upload or album link is set in data/config.json.
+  const photosOn = () => !!(CFG.photos_upload_url || CFG.photos_album_url);
   function renderPhotos() {
+    $("navPhotos").hidden = !photosOn();
     const set = (a, soon, url) => { if (url) { $(a).href = url; $(a).hidden = false; $(soon).hidden = true } else { $(a).hidden = true; $(soon).hidden = false } };
     set("photoUp", "photoUpSoon", CFG.photos_upload_url);
     set("photoAlbum", "photoAlbumSoon", CFG.photos_album_url);
+    if (!photosOn() && location.hash === "#photos") location.hash = "#home";
   }
 
   /* ---------- AVAILABILITY ---------- */
@@ -154,8 +158,6 @@
     const sel = $("who"), keep = sel.value || store.get("tt_who") || "";
     sel.innerHTML = '<option value="">Choose your name</option>' + Object.keys(PLAYERS).sort((a, b) => a.localeCompare(b)).map(p => `<option${p === keep ? " selected" : ""}>${esc(p)}</option>`).join("");
     renderMine();
-    if (CFG.availability_form_url) { $("formLink").href = CFG.availability_form_url; $("formLink").hidden = false; $("formSoon").hidden = true }
-    else { $("formLink").hidden = true; $("formSoon").hidden = false }
     const c = CFG.coordinator || {};
     if (!c.name && !c.email) { $("coord").innerHTML = '<p class="soon">Coordinator details will appear here soon.</p>'; return }
     const email = c.email ? esc(c.email) : "";

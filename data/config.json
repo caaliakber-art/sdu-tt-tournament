@@ -1,10 +1,9 @@
 {
  "tournament": "TT Tournament 2026",
  "coordinator": {
-  "name": "",
-  "email": ""
+  "name": "Akshith Tholakapalli",
+  "email": "akshiththolakpalli@sdu.works"
  },
- "availability_form_url": "",
  "photos_upload_url": "",
  "photos_album_url": "",
  "team_names": {
@@ -14,14 +13,6 @@
   "4": "Team 4",
   "5": "Team 5",
   "6": "Team 6"
- },
- "captains": {
-  "1": "",
-  "2": "",
-  "3": "",
-  "4": "",
-  "5": "",
-  "6": ""
  },
  "day_dates": {},
  "refresh_seconds": 60
