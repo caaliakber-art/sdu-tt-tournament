@@ -51,7 +51,7 @@ Everyone in the channel sees the live page without signing in to anything new. F
 ### Office TV slideshow
 
 Open the site address ending in `#tv` (for example `https://caaliakber-art.github.io/sdu-tt-tournament/#tv`) on the TV's browser, a laptop connected by HDMI, or a casting stick, and make the browser full screen (F11 on a laptop).
-It loops by itself: team standings and recent results, then each of the 7 events (group table and knockout draw), then the team cards. Each slide shows for 12 seconds (`tv_seconds` in `data/config.json`). New scores appear within a minute. Arrow keys skip slides; Esc exits.
+It loops by itself: team standings and recent results, then each of the 7 events (group table and knockout draw), then the team cards. Each slide shows for 12 seconds (`tv_seconds` in `data/config.json`). New scores appear within a minute. Arrow keys skip slides; Esc exits. When a new score arrives the TV shows a short result banner with confetti, and a final win gets a Champion banner. Click **Chime off** once before entering TV mode to turn on a soft chime for new results (off by default).
 
 ### Optional: photos tab (OneDrive or SharePoint)
 
@@ -69,10 +69,11 @@ Edit `data/config.json` on GitHub (open the file, click the pencil icon, edit, *
 "coordinator": { "name": "Akshith Tholakapalli", "email": "akshiththolakpalli@sdu.works" },
 "team_names":  { "1": "Team 1", ... },
 "captains":    { "1": "Captain name", ... },
-"day_dates":   { "1": "2026-10-05", "2": "2026-10-06" }
+"day_dates":   { "1": "2026-10-05", "2": "2026-10-06" },
+"name_fixes":  { "Ali Akbar": "Ali Akber" }
 ```
 
-`day_dates` is optional. When set, matches show the date, for example "Day 1, Mon 5 Oct".
+`name_fixes` corrects spellings from the scorecard without editing the coordinator's file. `day_dates` is optional. When set, matches show the date, for example "Day 1, Mon 5 Oct".
 
 ## 3. Privacy
 

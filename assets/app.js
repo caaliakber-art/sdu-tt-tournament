@@ -8,6 +8,8 @@
   const store = { get(k) { try { return localStorage.getItem(k) } catch (_) { return null } }, set(k, v) { try { localStorage.setItem(k, v) } catch (_) {} } };
 
   let FX = null, RES = { results: {} }, CFG = {}, R = {};
+  const fresh = new Map();               // match id -> time it arrived; highlighted for 3 minutes
+  const isFresh = id => { const t = fresh.get(String(id)); return t && Date.now() - t < 180000 };
   let EVENTS = [], ROSTER = {}, MATCHES = [], KO = [];
   const TEAMS = [1, 2, 3, 4, 5, 6];
   let curEv = store.get("tt_ev") || "MD1", feedMode = "res", tvIdx = 0, tvTimer = null, lastUpdated = null;
@@ -113,7 +115,7 @@
       const kos = KO.filter(k => k.winner).slice().reverse();
       const list = MATCHES.filter(m => R[m.id]).sort((a, b) => b.id - a.id).slice(0, Math.max(0, 6 - kos.length));
       const koItems = kos.slice(0, 6).map(k => `<li><span class="meta"><span class="tag">${esc(koTag(k))}</span>${esc(k.format)} · ${esc(k.round)}</span><span class="${k.winner === 1 ? "won" : ""}">${esc(k.c1)}</span><span class="sc">${k.w1 ?? ""}-${k.w2 ?? ""}</span><span class="r ${k.winner === 2 ? "won" : ""}">${esc(k.c2)}</span></li>`);
-      const items = koItems.concat(list.map(m => `<li><span class="meta"><span class="tag">${esc(m.f)}</span>${slotTxt(m)}</span>${pairLine(m, R[m.id])}</li>`));
+      const items = koItems.concat(list.map(m => `<li class="${isFresh(m.id) ? "fresh" : ""}"><span class="meta"><span class="tag">${esc(m.f)}</span>${slotTxt(m)}</span>${pairLine(m, R[m.id])}</li>`));
       $("feed").innerHTML = items.length ? items.join("") : '<li class="empty">No results yet.</li>';
     } else {
       $("rTitle").textContent = "Next up";
@@ -130,7 +132,7 @@
     $("evSub").textContent = `${ms.filter(m => R[m.id]).length} of ${ms.length} matches played`;
     $("evTabs").innerHTML = EVENTS.map(e => `<button role="tab" class="tab" aria-selected="${e.k === f}" data-ev="${esc(e.k)}">${esc(e.n)}</button>`).join("");
     $("stand").tBodies[0].innerHTML = tb.map((r, i) => `<tr class="${i === 3 ? "cut" : ""}"><td class="rk">${i + 1}</td><td class="l"><div class="nm">${esc(nm(f, r.t))}</div>${chip(r.t)}</td><td>${r.p}</td><td>${r.w}</td><td>${r.l}</td><td>${r.d > 0 ? "+" : ""}${r.d}</td><td class="big">${r.pts}</td><td class="c">${qBadge(st[r.t])}</td></tr>`).join("");
-    $("evMatches").innerHTML = ms.slice().sort((x, y) => (!!R[y.id]) - (!!R[x.id]) || x.id - y.id).map(m => `<li><span class="meta">${slotTxt(m)}</span>${pairLine(m, R[m.id])}</li>`).join("");
+    $("evMatches").innerHTML = ms.slice().sort((x, y) => (!!R[y.id]) - (!!R[x.id]) || x.id - y.id).map(m => `<li class="${isFresh(m.id) ? "fresh" : ""}"><span class="meta">${slotTxt(m)}</span>${pairLine(m, R[m.id])}</li>`).join("");
     renderBracket(f);
   }
   const ROUND_SHORT = r => r.replace(/^quarterfinal\s*/i, "QF").replace(/^semifinal\s*/i, "SF").replace(/^final$/i, "Final");
@@ -141,7 +143,7 @@
     const seedTxt = seed && !/winner|awaiting/i.test(seed) ? (/^\d+$/.test(seed) ? `#${seed}` : seed) : "";
     const won = k.winner === n, lost = k.winner && k.winner !== n;
     const sets = k.sets.map(p => `<span class="${p[n - 1] > p[2 - n] ? "sw" : ""}">${p[n - 1]}</span>`).join("");
-    return `<span class="p ${won ? "won" : ""} ${lost ? "lost" : ""}"><span>${tbd ? `<span class="tbd">${esc(seed && /winner|awaiting/i.test(seed) ? seed : "To be decided")}</span>` : esc(c)}${seedTxt ? `<span class="seed">${esc(seedTxt)}</span>` : ""}</span><span class="ko-r">${sets ? `<span class="sets">${sets}</span>` : ""}${t ? chip(t) : ""}</span></span>`;
+    return `<span class="p ${won ? "won" : ""} ${lost ? "lost" : ""}"><span class="who"><span class="nm">${won ? '<span class="tick" aria-label="Winner">✓</span>' : ""}${tbd ? `<span class="tbd">${esc(seed && /winner|awaiting/i.test(seed) ? seed : "To be decided")}</span>` : esc(c)}${seedTxt ? `<span class="seed">${esc(seedTxt)}</span>` : ""}</span>${t ? chip(t) : ""}</span>${sets ? `<span class="sets">${sets}</span>` : ""}</span>`;
   }
   function renderBracket(f) {
     const ties = KO.filter(k => k.events.includes(f));
@@ -150,7 +152,7 @@
       const anyResult = ties.some(k => k.winner);
       const pending = !(ties[0].events.every(groupDone));
       $("brTitle").textContent = `${fam} knockout${pending && !anyResult ? " (projected)" : ""}`;
-      $("bracket").innerHTML = ties.map(k => `<div class="tie ${k.winner ? "done" : ""}"><span class="lab">${esc(k.round)}${k.winner ? ` · ${esc(k.w1 ?? "")}-${esc(k.w2 ?? "")}` : ""}</span>${koSide(k, 1)}${koSide(k, 2)}</div>`).join("");
+      $("bracket").innerHTML = ties.map(k => `<div class="tie ${k.winner ? "done" : ""} ${k.winner && /^final/i.test(k.round) ? "champ" : ""}">${k.winner && /^final/i.test(k.round) ? `<span class="ribbon">Champion · ${esc(k.winner === 1 ? k.c1 : k.c2)}</span>` : ""}<span class="lab">${esc(k.round)}${k.winner ? ` · ${esc(k.w1 ?? "")}-${esc(k.w2 ?? "")}` : ""}</span>${koSide(k, 1)}${koSide(k, 2)}</div>`).join("");
       return;
     }
     // Fallback when the scorecard has no Finals sheet: work the draw out from the standings.
@@ -257,6 +259,7 @@
     if (!EVENTS.length) return;
     const list = slides(); tvSlide = ((i % list.length) + list.length) % list.length; const s = list[tvSlide];
     document.documentElement.dataset.slide = s.k;
+    const mainEl = document.querySelector("main"); mainEl.classList.remove("enter"); void mainEl.offsetWidth; mainEl.classList.add("enter");
     VIEWS.forEach(x => $("view-" + x).hidden = x !== (s.k === "teams" ? "teams" : "home"));
     if (s.k === "event") { curEv = s.ev; renderEvent() }
     $("tvLabel").textContent = s.label;
@@ -283,6 +286,53 @@
       route();
     }
   }
+  /* ---------- result moments: banner + confetti on the TV, toast elsewhere, optional chime ---------- */
+  const reduceMotion = () => window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let chimeOn = store.get("tt_chime") === "1", audio = null;
+  function setChimeBtn() { $("chimeBtn").textContent = chimeOn ? "Chime on" : "Chime off"; $("chimeBtn").setAttribute("aria-pressed", chimeOn) }
+  function chime(big) {
+    if (!chimeOn) return;
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      if (audio.state === "suspended") audio.resume();
+      const notes = big ? [523.25, 659.25, 783.99, 1046.5] : [659.25, 880];   // C-E-G-C for a title, E-A otherwise
+      notes.forEach((f, i) => {
+        const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime + i * 0.16;
+        o.type = "sine"; o.frequency.value = f;
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.07, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+        o.connect(g).connect(audio.destination); o.start(t); o.stop(t + 0.65);
+      });
+    } catch (_) {}
+  }
+  function confetti(big) {
+    if (reduceMotion()) return;
+    const cv = $("confetti"), ctx = cv.getContext("2d");
+    const W = cv.width = innerWidth, H = cv.height = innerHeight;
+    const cols = ["#00F6ED", "#E9806E", "#E75A7C", "#CAD8DE", "#ffffff"];
+    const n = big ? 220 : 110, parts = Array.from({ length: n }, () => ({ x: W / 2 + (Math.random() - .5) * W * .3, y: H * .45, vx: (Math.random() - .5) * 14, vy: -Math.random() * 14 - 4, s: 4 + Math.random() * 6, r: Math.random() * 6, vr: (Math.random() - .5) * .3, c: cols[(Math.random() * cols.length) | 0] }));
+    const t0 = performance.now(), dur = big ? 4200 : 2600;
+    (function frame(t) {
+      const k = (t - t0) / dur; ctx.clearRect(0, 0, W, H); if (k >= 1) return;
+      for (const p of parts) { p.vy += .35; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r += p.vr; ctx.save(); ctx.globalAlpha = 1 - k; ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore() }
+      requestAnimationFrame(frame);
+    })(t0);
+  }
+  let celQueue = [], celBusy = false;
+  function celebrate(list) {
+    chime(list.some(x => x.big));
+    if (!isTv()) { const m = list[0]; toast(list.length > 1 ? `${list.length} new results in` : `${m.name} (${teamName(m.team)}) win ${m.score} · ${m.tag}`); return }
+    celQueue.push(...list.slice(0, 4)); if (!celBusy) nextCel();
+  }
+  function nextCel() {
+    const m = celQueue.shift(); if (!m) { celBusy = false; $("celebrate").hidden = true; return }
+    celBusy = true;
+    $("celTag").textContent = m.big ? `Champions · ${m.tag}` : m.tag;
+    $("celName").textContent = m.name; $("celScore").textContent = m.score; $("celTeam").innerHTML = chip(m.team);
+    const el = $("celebrate"); el.classList.toggle("big", m.big); el.hidden = false; el.classList.remove("show"); void el.offsetWidth; el.classList.add("show");
+    confetti(m.big);
+    setTimeout(nextCel, m.big ? 7000 : 5000);
+  }
+
   let toastT = null;
   function toast(msg) { $("toast").textContent = msg; $("toast").hidden = false; clearTimeout(toastT); toastT = setTimeout(() => $("toast").hidden = true, 9000) }
 
@@ -291,15 +341,19 @@
     try {
       const [fx, res, cfg, ko] = await Promise.all([getJSON("data/fixtures.json"), getJSON("data/results.json"), getJSON("data/config.json"), getJSON("data/knockout.json").catch(() => ({ ties: [] }))]);
       const newIds = first ? [] : Object.keys(res.results || {}).filter(k => !R[k]);
+      const koKey = k => `${k.format}|${k.round}`;
+      const prevKo = new Set(KO.filter(k => k.winner).map(koKey));
+      const newKo = first ? [] : ((ko && ko.ties) || []).filter(k => k.winner && !prevKo.has(koKey(k)));
       FX = fx; RES = res; CFG = cfg || {};
       EVENTS = fx.events; ROSTER = fx.roster; MATCHES = fx.matches; R = res.results || {}; KO = (ko && ko.ties) || [];
       if (CFG.tournament) { $("title").textContent = CFG.tournament; document.title = CFG.tournament + " | SDU" }
       $("live").classList.remove("off");
-      if (newIds.length) {
-        const m = MATCHES.find(x => String(x.id) === newIds[newIds.length - 1]);
-        if (m) { const r = R[m.id], w = r[0] > r[1] ? m.a : m.b; toast(newIds.length > 1 ? `${newIds.length} new results in` : `${nm(m.f, w)} (${teamName(w)}) win ${Math.max(...r)}-${Math.min(...r)} · ${evName(m.f)}`) }
-      }
+      newIds.forEach(id => fresh.set(String(id), Date.now()));
       if (first || res.updated !== lastUpdated) renderAll();
+      const moments = newKo.map(k => ({ tag: `${k.format} · ${k.round}`, name: k.winner === 1 ? k.c1 : k.c2, team: k.winner === 1 ? k.t1 : k.t2, score: `${k.w1 ?? ""}-${k.w2 ?? ""}`, big: /^final/i.test(k.round) }))
+        .concat(newIds.map(id => { const m = MATCHES.find(x => String(x.id) === id); if (!m) return null; const r = R[m.id], w = r[0] > r[1] ? m.a : m.b;
+          return { tag: evName(m.f), name: nm(m.f, w), team: w, score: `${Math.max(...r)}-${Math.min(...r)}`, big: false } }).filter(Boolean));
+      if (moments.length) celebrate(moments);
       if (isTv()) { if (first) tvDur = Math.max(5, Number(CFG.tv_seconds) || 12) * 1000; if (tvSlide < 0) { showSlide(0); tvRestart() } }
       lastUpdated = res.updated;
     } catch (e) {
@@ -316,6 +370,9 @@
   $("segNext").onclick = () => { feedMode = "next"; $("segNext").setAttribute("aria-pressed", "true"); $("segRes").setAttribute("aria-pressed", "false"); renderTop() };
   $("who").addEventListener("change", () => { store.set("tt_who", $("who").value); renderMine() });
   $("tvBtn").onclick = () => setTv(!document.documentElement.classList.contains("tv"));
+  setChimeBtn();
+  $("chimeBtn").onclick = () => { chimeOn = !chimeOn; store.set("tt_chime", chimeOn ? "1" : "0"); setChimeBtn(); if (chimeOn) chime(false) };
+  window.ttDemo = big => celebrate([{ tag: big ? "Mixed Doubles · Final" : "Men's Doubles 1", name: "Sample winner", team: 3, score: big ? "2-1" : "21-18", big: !!big }]);
   document.addEventListener("keydown", e => {
     if (!isTv()) return;
     if (e.key === "Escape") setTv(false);

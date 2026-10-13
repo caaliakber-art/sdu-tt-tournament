@@ -71,7 +71,7 @@ def num(v):
         return None
 
 
-def read_knockout(wb, warnings):
+def read_knockout(wb, warnings, fixes=None):
     """Read the coordinator's Finals sheet: draw, seeds, per-set or per-match scores, winner.
     Returns {"ties": [...]}; empty when the sheet is missing so the site falls back to its own draw."""
     if "Finals" not in wb.sheetnames:
@@ -108,8 +108,8 @@ def read_knockout(wb, warnings):
             a, b = num(g(row, f"match/set {n}", 1)), num(g(row, f"match/set {n}", 2))
             if a is not None and b is not None:
                 sets.append([a, b])
-        c1, c2 = clean(g(row, "competitor 1")), clean(g(row, "competitor 2"))
-        winner = clean(g(row, "winner"))
+        c1, c2 = fix_names(clean(g(row, "competitor 1")), fixes), fix_names(clean(g(row, "competitor 2")), fixes)
+        winner = fix_names(clean(g(row, "winner")), fixes)
         tie = {
             "format": fmt, "events": fam, "round": rnd,
             "seed1": clean(g(row, "seed 1")), "c1": c1, "t1": team_no(g(row, "team 1")),
@@ -123,10 +123,27 @@ def read_knockout(wb, warnings):
     return {"ties": ties}
 
 
+def load_name_fixes(out):
+    """Spelling corrections from data/config.json "name_fixes", e.g. {"Ali Akbar": "Ali Akber"}.
+    Applied to each person in a pair, so the coordinator's Excel never needs editing."""
+    try:
+        cfg = json.loads((out / "config.json").read_text(encoding="utf-8"))
+        return {clean(k): clean(v) for k, v in (cfg.get("name_fixes") or {}).items() if clean(k)}
+    except (OSError, ValueError):
+        return {}
+
+
+def fix_names(entry, fixes):
+    if not fixes or not entry:
+        return entry
+    return " + ".join(fixes.get(p, p) for p in re.split(r"\s*\+\s*", entry))
+
+
 def main():
     src = Path(sys.argv[1] if len(sys.argv) > 1 else "scores/Score_Card.xlsx")
     out = Path(sys.argv[2] if len(sys.argv) > 2 else "data")
     out.mkdir(parents=True, exist_ok=True)
+    fixes = load_name_fixes(out)
 
     wb = openpyxl.load_workbook(src, data_only=True)
     if SHEET not in wb.sheetnames:
@@ -168,7 +185,7 @@ def main():
         a, b = team_no(row[c_t1]), team_no(row[c_t2])
         key, name = event_of(row[c_fmt])
         events[key] = name
-        p1, p2 = clean(row[c_p1]), clean(row[c_p2])
+        p1, p2 = fix_names(clean(row[c_p1]), fixes), fix_names(clean(row[c_p2]), fixes)
         for t, p in ((a, p1), (b, p2)):
             prev = roster.setdefault(key, {}).get(str(t))
             if prev and prev != p:
@@ -190,7 +207,7 @@ def main():
         hi, lo = max(sa, sb), min(sa, sb)
         if not ((hi == 21 and lo <= 19) or (lo >= 20 and hi == lo + 2)):
             warnings.append(f"Match {mid} ({p1} v {p2}): unusual score {score} for a game to 21, kept.")
-        win_name = clean(row[c_win]) if c_win is not None else ""
+        win_name = fix_names(clean(row[c_win]), fixes) if c_win is not None else ""
         if win_name and win_name != (p1 if sa > sb else p2):
             warnings.append(f"Match {mid}: Winner column says '{win_name}' but score {score} says '{p1 if sa > sb else p2}'. Score used.")
         wt = team_no(row[c_wteam]) if c_wteam is not None else None
@@ -198,7 +215,7 @@ def main():
             warnings.append(f"Match {mid}: Winning Team column says Team {wt} but score {score} says Team {a if sa > sb else b}. Score used.")
         results[str(mid)] = [sa, sb]
 
-    knockout = read_knockout(wb, warnings)
+    knockout = read_knockout(wb, warnings, fixes)
 
     order = [k for k in EVENT_ORDER if k in events] + sorted(k for k in events if k not in EVENT_ORDER)
     fixtures = {

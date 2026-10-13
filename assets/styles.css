@@ -120,12 +120,14 @@ td.big{font-weight:700}
 .tie .p{display:flex;justify-content:space-between;gap:8px;align-items:center}
 .tie .p span:first-child{min-width:0}
 .tie .seed{color:var(--muted);font-size:12px;margin-left:4px}
-.tie .ko-r{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.tie .who{display:grid;gap:2px;min-width:0}
+.tie .who .tchip{font-size:11px}
+.tie .sets{flex-shrink:0}
 .tie .sets{display:inline-flex;gap:4px}
 .tie .sets span{min-width:22px;text-align:center;font-size:13px;color:var(--muted);background:var(--zebra);border-radius:4px;padding:1px 4px}
 .tie .sets span.sw{color:var(--fg);font-weight:700}
-.tie .p.won>span:first-child{font-weight:700}
-.tie .p.lost>span:first-child{color:var(--muted)}
+.tie .p.won .nm{font-weight:700}
+.tie .p.lost .nm{color:var(--muted)}
 .tie .tbd{color:var(--muted);font-style:italic}
 .tie.done{border-color:var(--sky)}
 
@@ -167,11 +169,37 @@ select{width:100%;max-width:420px;font:inherit;padding:10px 12px;border-radius:8
 
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 18px;border-radius:10px;border-left:4px solid var(--neon);box-shadow:0 8px 30px rgba(0,0,0,.25);font-weight:500;max-width:calc(100% - 32px);z-index:5}
 
+/* Moments: fresh results, knockout winners, champion, TV result banner */
+.hbtns{display:flex;gap:8px;align-items:center}
+.ghostbtn{border-color:rgba(255,255,255,.2);color:var(--sky);font-size:13px;padding:6px 12px}
+.ghostbtn[aria-pressed="true"]{color:#fff;border-color:var(--neon)}
+@keyframes freshfade{0%{background:rgba(0,246,237,.28)}100%{background:transparent}}
+.list li.fresh{animation:freshfade 6s ease-out 1;border-left:3px solid var(--neon);padding-left:8px}
+.tie .tick{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--neon);color:#0F1E2C;font-size:11px;font-weight:800;margin-right:6px;vertical-align:1px}
+.tie.done .p.won{position:relative}
+.tie.champ{position:relative;border-color:var(--salmon);box-shadow:0 0 0 1px var(--salmon) inset;overflow:hidden}
+.tie .ribbon{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;font:800 12px var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:#fff;background:linear-gradient(90deg,var(--salmon),var(--rose));padding:3px 8px;border-radius:4px;justify-self:start}
+.tie.champ::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.35) 50%,transparent 65%);transform:translateX(-100%);animation:shimmer 3.5s ease-in-out infinite}
+@keyframes shimmer{60%,100%{transform:translateX(100%)}}
+main.enter{animation:slidein .5s ease-out}
+@keyframes slidein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.celebrate{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:rgba(19,42,64,.55)}
+.celebrate canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.cel-card{position:relative;display:grid;justify-items:center;gap:10px;background:var(--navy);color:#fff;padding:36px 64px;border-radius:18px;border:2px solid var(--neon);box-shadow:0 20px 60px rgba(0,0,0,.35);text-align:center;max-width:min(90vw,1100px)}
+.cel-tag{font:700 22px var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--neon)}
+.cel-name{font:800 clamp(36px,5vw,72px)/1.05 var(--f-display);text-transform:uppercase;text-wrap:balance}
+.cel-score{font:700 40px var(--f-display);color:var(--sky)}
+.cel-card .tchip{color:var(--sky);font-size:16px}
+.celebrate.big .cel-card{border-color:var(--salmon)}
+.celebrate.big .cel-tag{color:var(--salmon)}
+.celebrate.show .cel-card{animation:pop .6s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.8);opacity:0}to{transform:none;opacity:1}}
+
 /* TV slideshow: each slide fits one 16:9 screen; a navy bar at the bottom shows the slide and a progress strip */
 .capt{font-size:12px;color:var(--muted);margin-top:2px}
 .tvbar{display:none}
 .tv body{font-size:20px;cursor:none;padding-bottom:64px}
-.tv .notv,.tv .sdufoot{display:none!important}
+.tv .notv,.tv .sdufoot,.tv .ghostbtn{display:none!important}
 .tv .wrap{max-width:1760px}
 .tv .topline{padding-block:10px 0}
 .tv .brand{padding-block:4px 12px}
@@ -193,11 +221,11 @@ select{width:100%;max-width:420px;font:inherit;padding:10px 12px;border-radius:8
 .tv[data-slide="overview"] #evCard{display:none}
 /* event slide: group table left, knockout right */
 .tv[data-slide="event"] #topGrid{display:none}
-.tv[data-slide="event"] #evCard{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);column-gap:28px;align-content:start}
+.tv[data-slide="event"] #evCard{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto 1fr;column-gap:28px;align-content:start}
 .tv[data-slide="event"] #evCard>.head{grid-column:1/-1}
 .tv[data-slide="event"] #evCard>.evgrid{grid-column:1;grid-row:2/4;grid-template-columns:minmax(0,1fr);padding-right:0}
-.tv[data-slide="event"] #brTitle{grid-column:2;grid-row:2;padding:0 18px 0 0;margin-top:0}
-.tv[data-slide="event"] #bracket{grid-column:2;grid-row:3;padding:4px 18px 18px 0;align-content:start}
+.tv[data-slide="event"] #brTitle{grid-column:2;grid-row:2;padding:0 18px 0 0;margin-top:0;align-self:start}
+.tv[data-slide="event"] #bracket{grid-column:2;grid-row:3;padding:4px 18px 18px 0;align-content:start;grid-template-columns:repeat(2,minmax(0,1fr))}
 .tv .tie{font-size:18px}
 /* teams slide */
 .tv #view-teams .intro p{display:none}
@@ -207,4 +235,4 @@ select{width:100%;max-width:420px;font:inherit;padding:10px 12px;border-radius:8
 .tv .tcard table td{padding:5px 6px}
 .tv .tcard table th{padding:5px 6px}
 .tv .toast{font-size:26px;padding:18px 28px;bottom:84px}
-@media (prefers-reduced-motion:reduce){.live i{animation:none}.progress b{transition:none}.tvbar b{display:none}}
+@media (prefers-reduced-motion:reduce){.live i{animation:none}.progress b{transition:none}.tvbar b{display:none}.tie.champ::after,main.enter,.celebrate.show .cel-card,.list li.fresh{animation:none}}

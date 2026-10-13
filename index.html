@@ -16,7 +16,7 @@
   <div class="sdubars" aria-hidden="true"></div>
   <div class="wrap topline">
     <img class="logo" src="assets/sdu-logo-white.png" alt="Singhvi Dev &amp; Unni LLP, Chartered Accountants" width="515" height="235">
-    <button class="btn" id="tvBtn" type="button">TV mode</button>
+    <div class="hbtns"><button class="btn ghostbtn" id="chimeBtn" type="button" aria-pressed="false" title="Play a short chime when a new result comes in">Chime off</button><button class="btn" id="tvBtn" type="button">TV mode</button></div>
   </div>
   <div class="wrap brand">
     <span class="live off" id="live"><i></i><span id="liveTxt">Loading</span></span>
@@ -129,6 +129,7 @@
     <span><b>BENGALURU | MUMBAI</b> &nbsp;·&nbsp; www.sdu.works</span>
   </div>
 </footer>
+<div class="celebrate" id="celebrate" aria-live="polite" hidden><canvas id="confetti"></canvas><div class="cel-card"><span class="cel-tag" id="celTag"></span><span class="cel-name" id="celName"></span><span class="cel-score" id="celScore"></span><span id="celTeam"></span></div></div>
 <div class="tvbar" aria-hidden="true"><b id="tvProg"></b><span id="tvLabel"></span><span class="dots" id="tvDots"></span><span class="tvhint">Esc to exit</span></div>
 <div class="toast" id="toast" role="status" hidden></div>
 <script src="assets/app.js" defer></script>
