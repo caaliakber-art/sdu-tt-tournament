@@ -19,7 +19,7 @@
   const captain = t => (CFG.captains && CFG.captains[t]) || "";
   // One treatment wherever a TEAM is the subject: swatch, team name prominent, captain beneath.
   const capTxt = t => captain(t) ? `Captain ${esc(captain(t))}` : `<span class="tbc">Captain to be confirmed</span>`;
-  const teamBlock = (t, size = "") => `<span class="team ${size}" style="--tc:var(--t${t})"><i class="tsw"></i><span class="tw"><span class="tname">${esc(teamName(t))}</span><span class="tcap">${capTxt(t)}</span></span></span>`;
+  const teamBlock = (t, size = "", noTbc = false) => `<span class="team ${size}" style="--tc:var(--t${t})"><i class="tsw"></i><span class="tw"><span class="tname">${esc(teamName(t))}</span>${noTbc && !captain(t) ? "" : `<span class="tcap">${capTxt(t)}</span>`}</span></span>`;
   const teamInline = t => `<b>${esc(teamName(t))}</b> · ${captain(t) ? `Captain ${esc(captain(t))}` : "Captain to be confirmed"}`;
   const nm = (f, t) => (ROSTER[f] && ROSTER[f][t]) || `Team ${t}`;
   const evName = k => (EVENTS.find(e => e.k === k) || { n: k }).n;
@@ -108,11 +108,20 @@
     Object.values(s).forEach(r => r.pts = r.lw + r.ko + r.bonus);
     return Object.values(s).sort((a, b) => b.pts - a.pts || a.t - b.t);
   }
+  // Rank movement: compare with the ranks from the previous data update (kept per browser).
+  function rankMoves(ranks) {
+    let snap = null; try { snap = JSON.parse(store.get("tt_ranks") || "null") } catch (_) {}
+    if (snap && snap.updated === RES.updated) return snap.moves || {};
+    const moves = {}; if (snap && snap.ranks) TEAMS.forEach(t => { if (snap.ranks[t]) moves[t] = snap.ranks[t] - ranks[t] });
+    store.set("tt_ranks", JSON.stringify({ updated: RES.updated, ranks, moves })); return moves;
+  }
   function renderTop() {
     const order = teamScores();
-    let rank = 0, prev = null;
-    $("teamTbl").tBodies[0].innerHTML = order.map((r, i) => { if (r.pts !== prev) { rank = i + 1; prev = r.pts }
-      return `<tr><td class="rk">${rank}</td><td class="l">${teamBlock(r.t)}</td><td>${r.lw}</td><td>${r.ko}</td><td>${r.bonus}</td><td class="big">${r.pts}</td></tr>` }).join("");
+    let rank = 0, prev = null; const ranks = {};
+    order.forEach((r, i) => { if (r.pts !== prev) { rank = i + 1; prev = r.pts } ranks[r.t] = rank });
+    const moves = rankMoves(ranks);
+    const mv = t => moves[t] > 0 ? `<span class="mv up" title="Up ${moves[t]}">▲${moves[t]}</span>` : moves[t] < 0 ? `<span class="mv down" title="Down ${-moves[t]}">▼${-moves[t]}</span>` : "";
+    $("teamTbl").tBodies[0].innerHTML = order.map(r => `<tr class="${ranks[r.t] === 1 ? "lead" : ""}"><td class="rk">${ranks[r.t]}${mv(r.t)}</td><td class="l">${teamBlock(r.t)}${ranks[r.t] === 1 ? '<span class="leadtag">Leader</span>' : ""}</td><td>${r.lw}</td><td>${r.ko}</td><td>${r.bonus}</td><td class="big">${r.pts}</td></tr>`).join("");
     if (feedMode === "res") {
       $("rTitle").textContent = "Recent results";
       const kos = KO.filter(k => k.winner).slice().reverse();
@@ -148,7 +157,7 @@
     const seedTxt = seed && !/winner|awaiting/i.test(seed) ? (/^\d+$/.test(seed) ? `#${seed}` : seed) : "";
     const won = k.winner === n, lost = k.winner && k.winner !== n;
     const sets = k.sets.map(p => `<span class="${p[n - 1] > p[2 - n] ? "sw" : ""}">${p[n - 1]}</span>`).join("");
-    return `<span class="p ${won ? "won" : ""} ${lost ? "lost" : ""}"><span class="who"><span class="nm">${won ? '<span class="tick" aria-label="Winner">✓</span>' : ""}${tbd ? `<span class="tbd">${esc(seed && /winner|awaiting/i.test(seed) ? seed : "To be decided")}</span>` : esc(c)}${seedTxt ? `<span class="seed">${esc(seedTxt)}</span>` : ""}</span>${t ? chip(t) : ""}</span>${sets ? `<span class="sets">${sets}</span>` : ""}</span>`;
+    return `<span class="p ${won ? "won" : ""} ${lost ? "lost" : ""}" style="--tc:var(--t${t || 0})"><span class="who"><span class="nm">${won ? '<span class="tick" aria-label="Winner">✓</span>' : ""}${tbd ? `<span class="tbd">${esc(seed && /winner|awaiting/i.test(seed) ? seed : "To be decided")}</span>` : esc(c)}${seedTxt ? `<span class="seed">${esc(seedTxt)}</span>` : ""}</span>${t ? chip(t) : ""}</span>${sets ? `<span class="sets">${sets}</span>` : ""}</span>`;
   }
   function renderBracket(f) {
     const ties = KO.filter(k => k.events.includes(f));
@@ -259,7 +268,7 @@
   /* TV slideshow: overview, then each event (group table + knockout), then the team cards. */
   let wake = null, tvSlide = -1, tvDur = 12000;
   const isTv = () => document.documentElement.classList.contains("tv");
-  const slides = () => [{ k: "overview", label: "Team standings and results" }, ...EVENTS.map(e => ({ k: "event", ev: e.k, label: e.n })), { k: "teams", label: "Teams" }];
+  const slides = () => [{ k: "overview", label: "Team standings and results" }, ...(spotlight() ? [{ k: "spot", label: "Spotlight" }] : []), ...EVENTS.map(e => ({ k: "event", ev: e.k, label: e.n })), { k: "teams", label: "Teams" }];
   function showSlide(i) {
     if (!EVENTS.length) return;
     const list = slides(); tvSlide = ((i % list.length) + list.length) % list.length; const s = list[tvSlide];
@@ -267,6 +276,7 @@
     const mainEl = document.querySelector("main"); mainEl.classList.remove("enter"); void mainEl.offsetWidth; mainEl.classList.add("enter");
     VIEWS.forEach(x => $("view-" + x).hidden = x !== (s.k === "teams" ? "teams" : "home"));
     if (s.k === "event") { curEv = s.ev; renderEvent() }
+    if (s.k === "spot") { const m = spotlight(); if (m) showMoment(m, true) } else if (spotOn && !celBusy) hideMoment();
     $("tvLabel").textContent = s.label;
     $("tvDots").innerHTML = list.map((_, j) => `<i class="${j === tvSlide ? "on" : ""}"></i>`).join("");
     const bar = $("tvProg"); bar.style.animation = "none"; void bar.offsetWidth; bar.style.animation = `tvprog ${tvDur}ms linear forwards`;
@@ -309,33 +319,80 @@
       });
     } catch (_) {}
   }
-  function confetti(big) {
+  /* Moments. A moment = { kick, tag, name, team, loser, sa, sb, sets, big }. */
+  const TEAMCOL = t => getComputedStyle(document.documentElement).getPropertyValue(`--t${t}`).trim() || "#00F6ED";
+  function leagueMoment(m) {
+    const r = R[m.id], w = r[0] > r[1] ? m.a : m.b, l = w === m.a ? m.b : m.a;
+    return { kick: "Winner", tag: `${evName(m.f)} · ${dayTxt(m.day)}`, name: nm(m.f, w), team: w, loser: nm(m.f, l), sa: Math.max(...r), sb: Math.min(...r), sets: "", big: false };
+  }
+  function koMoment(k) {
+    const w = k.winner, final = /^final/i.test(k.round);
+    return { kick: final ? "Champions" : `${k.round} winner`, tag: `${k.format} · ${k.round}`, name: w === 1 ? k.c1 : k.c2, team: w === 1 ? k.t1 : k.t2, loser: w === 1 ? k.c2 : k.c1,
+      sa: w === 1 ? k.w1 : k.w2, sb: w === 1 ? k.w2 : k.w1, sets: k.sets.map(p => w === 1 ? `${p[0]}-${p[1]}` : `${p[1]}-${p[0]}`).join("  ·  "), big: final };
+  }
+  // Spotlight on the TV: the latest champion, else the latest knockout winner, else the newest league result.
+  function spotlight() {
+    const finals = KO.filter(k => k.winner && /^final/i.test(k.round)); if (finals.length) return koMoment(finals[finals.length - 1]);
+    const kos = KO.filter(k => k.winner); if (kos.length) return koMoment(kos[kos.length - 1]);
+    const seen = RES.first_seen || {};
+    const last = MATCHES.filter(m => R[m.id]).sort((a, b) => String(seen[b.id] || "").localeCompare(String(seen[a.id] || "")) || b.id - a.id)[0];
+    return last ? leagueMoment(last) : null;
+  }
+  let fxRun = 0;
+  function burst(big, col) {
     if (reduceMotion()) return;
-    const cv = $("confetti"), ctx = cv.getContext("2d");
+    const run = ++fxRun, cv = $("confetti"), ctx = cv.getContext("2d");
     const W = cv.width = innerWidth, H = cv.height = innerHeight;
-    const cols = ["#00F6ED", "#E9806E", "#E75A7C", "#CAD8DE", "#ffffff"];
-    const n = big ? 220 : 110, parts = Array.from({ length: n }, () => ({ x: W / 2 + (Math.random() - .5) * W * .3, y: H * .45, vx: (Math.random() - .5) * 14, vy: -Math.random() * 14 - 4, s: 4 + Math.random() * 6, r: Math.random() * 6, vr: (Math.random() - .5) * .3, c: cols[(Math.random() * cols.length) | 0] }));
-    const t0 = performance.now(), dur = big ? 4200 : 2600;
+    const cols = [col, col, "#00F6ED", "#E9806E", "#E75A7C", "#CAD8DE", "#ffffff"];
+    const parts = [];
+    const spray = (x, y, n, sp, up) => { for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, v = Math.random() * sp; parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - up, s: 4 + Math.random() * 7, r: Math.random() * 6, vr: (Math.random() - .5) * .3, c: cols[(Math.random() * cols.length) | 0], life: 1 }) } };
+    // side cannons, then (for titles) fireworks bursts across the top half
+    spray(0, H * .8, big ? 120 : 80, 16, 10); spray(W, H * .8, big ? 120 : 80, 16, 10);
+    parts.forEach(p => { p.vx = Math.abs(p.vx) * (p.x === 0 ? 1 : -1) });
+    const bursts = big ? 9 : 3; let fired = 0;
+    const t0 = performance.now(), dur = big ? 8000 : 5000;
     (function frame(t) {
+      if (run !== fxRun) return;
       const k = (t - t0) / dur; ctx.clearRect(0, 0, W, H); if (k >= 1) return;
-      for (const p of parts) { p.vy += .35; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r += p.vr; ctx.save(); ctx.globalAlpha = 1 - k; ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore() }
+      if (fired < bursts && t - t0 > 500 + fired * (big ? 650 : 900)) { spray(W * (.2 + Math.random() * .6), H * (.15 + Math.random() * .3), big ? 90 : 60, 9, 2); fired++ }
+      for (const p of parts) { p.vy += .22; p.vx *= .985; p.x += p.vx; p.y += p.vy; p.r += p.vr; p.life -= .004;
+        ctx.save(); ctx.globalAlpha = Math.max(0, Math.min(1, p.life) * (1 - k * .6)); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore() }
       requestAnimationFrame(frame);
     })(t0);
   }
+  function countUp(el, to, ms) {
+    if (to == null || to === "") { el.textContent = ""; return }
+    if (reduceMotion()) { el.textContent = to; return }
+    const t0 = performance.now();
+    (function f(t) { const k = Math.min(1, (t - t0) / ms); el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(f) })(t0);
+  }
+  let spotOn = false;
+  function showMoment(m, asSlide) {
+    const el = $("celebrate"); spotOn = !!asSlide;
+    el.style.setProperty("--wc", TEAMCOL(m.team));
+    $("celKick").textContent = m.kick; $("celTag").textContent = m.tag;
+    $("celTrophy").hidden = !m.big;
+    $("celName").innerHTML = m.name.split(" ").map((w, i) => `<span style="animation-delay:${.25 + i * .09}s">${esc(w)}</span>`).join(" ");
+    countUp($("celA"), m.sa, 1100); countUp($("celB"), m.sb, 1100);
+    $("celSets").textContent = m.sets || "";
+    $("celVs").textContent = m.loser && !/^tbd$/i.test(m.loser) ? `beat ${m.loser}` : "";
+    $("celTeam").innerHTML = m.team ? teamBlock(m.team, "cel", true) : "";
+    el.classList.toggle("big", !!m.big); el.classList.toggle("slide", !!asSlide);
+    el.hidden = false; el.classList.remove("show"); void el.offsetWidth; el.classList.add("show");
+    burst(m.big, TEAMCOL(m.team));
+  }
+  function hideMoment() { spotOn = false; fxRun++; $("celebrate").hidden = true }
   let celQueue = [], celBusy = false;
   function celebrate(list) {
     chime(list.some(x => x.big));
-    if (!isTv()) { const m = list[0]; toast(list.length > 1 ? `${list.length} new results in` : `${m.name} (${teamName(m.team)}) win ${m.score} · ${m.tag}`); return }
+    if (!isTv()) { const m = list[0]; toast(list.length > 1 ? `${list.length} new results in` : `${m.name} (${teamName(m.team)}) win ${m.sa}-${m.sb} · ${m.tag}`); return }
     celQueue.push(...list.slice(0, 4)); if (!celBusy) nextCel();
   }
   function nextCel() {
-    const m = celQueue.shift(); if (!m) { celBusy = false; $("celebrate").hidden = true; return }
-    celBusy = true;
-    $("celTag").textContent = m.big ? `Champions · ${m.tag}` : m.tag;
-    $("celName").textContent = m.name; $("celScore").textContent = m.score; $("celTeam").innerHTML = teamBlock(m.team, "cel");
-    const el = $("celebrate"); el.classList.toggle("big", m.big); el.hidden = false; el.classList.remove("show"); void el.offsetWidth; el.classList.add("show");
-    confetti(m.big);
-    setTimeout(nextCel, m.big ? 7000 : 5000);
+    const m = celQueue.shift(); if (!m) { celBusy = false; hideMoment(); return }
+    celBusy = true; clearInterval(tvTimer);                  // pause the slideshow while celebrating
+    showMoment(m, false);
+    setTimeout(() => { if (!celQueue.length) { celBusy = false; hideMoment(); if (isTv()) { showSlide(tvSlide); tvRestart() } } else nextCel() }, m.big ? 10000 : 7000);
   }
 
   let toastT = null;
@@ -355,9 +412,7 @@
       $("live").classList.remove("off");
       newIds.forEach(id => fresh.set(String(id), Date.now()));
       if (first || res.updated !== lastUpdated) renderAll();
-      const moments = newKo.map(k => ({ tag: `${k.format} · ${k.round}`, name: k.winner === 1 ? k.c1 : k.c2, team: k.winner === 1 ? k.t1 : k.t2, score: `${k.w1 ?? ""}-${k.w2 ?? ""}`, big: /^final/i.test(k.round) }))
-        .concat(newIds.map(id => { const m = MATCHES.find(x => String(x.id) === id); if (!m) return null; const r = R[m.id], w = r[0] > r[1] ? m.a : m.b;
-          return { tag: evName(m.f), name: nm(m.f, w), team: w, score: `${Math.max(...r)}-${Math.min(...r)}`, big: false } }).filter(Boolean));
+      const moments = newKo.map(koMoment).concat(newIds.map(id => MATCHES.find(x => String(x.id) === id)).filter(Boolean).map(leagueMoment));
       if (moments.length) celebrate(moments);
       if (isTv()) { if (first) tvDur = Math.max(5, Number(CFG.tv_seconds) || 12) * 1000; if (tvSlide < 0) { showSlide(0); tvRestart() } }
       lastUpdated = res.updated;
@@ -377,7 +432,8 @@
   $("tvBtn").onclick = () => setTv(!document.documentElement.classList.contains("tv"));
   setChimeBtn();
   $("chimeBtn").onclick = () => { chimeOn = !chimeOn; store.set("tt_chime", chimeOn ? "1" : "0"); setChimeBtn(); if (chimeOn) chime(false) };
-  window.ttDemo = big => celebrate([{ tag: big ? "Mixed Doubles · Final" : "Men's Doubles 1", name: "Sample winner", team: 3, score: big ? "2-1" : "21-18", big: !!big }]);
+  window.ttDemo = big => celebrate([big ? { kick: "Champions", tag: "Mixed Doubles · Final", name: "Sample Pair + Winners", team: 3, loser: "Sample Runners-up", sa: 2, sb: 1, sets: "15-12  ·  13-15  ·  15-11", big: true }
+                                          : { kick: "Winner", tag: "Men's Doubles 1 · Day 8", name: "Sample Pair + Winners", team: 4, loser: "Sample Opponents", sa: 21, sb: 18, sets: "", big: false }]);
   document.addEventListener("keydown", e => {
     if (!isTv()) return;
     if (e.key === "Escape") setTv(false);

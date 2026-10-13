@@ -188,7 +188,7 @@ select{width:100%;max-width:420px;font:inherit;padding:10px 12px;border-radius:8
 .tv .team .tsw{height:42px}
 .tv .team.lg .tname{font-size:24px}
 .tv .tstats{font-size:15px;padding:6px 16px 0}
-.tv .list li{font-size:20px;padding:11px 0}
+.tv .list li{font-size:20px;padding:11px 0;grid-template-columns:minmax(0,1fr) 96px minmax(0,1fr)}
 .tv .list .meta{font-size:15px}
 .tv .list .tag{font-size:13px}
 
@@ -206,17 +206,48 @@ select{width:100%;max-width:420px;font:inherit;padding:10px 12px;border-radius:8
 @keyframes shimmer{60%,100%{transform:translateX(100%)}}
 main.enter{animation:slidein .5s ease-out}
 @keyframes slidein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-.celebrate{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:rgba(19,42,64,.55)}
+/* Winner moment: full screen, coloured by the WINNING team (--wc) */
+.celebrate{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:#132A40;background:radial-gradient(ellipse at 50% 45%,color-mix(in srgb,var(--wc,#00F6ED) 28%,#132A40) 0%,#0E1D2C 70%);overflow:hidden}
 .celebrate canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.cel-card{position:relative;display:grid;justify-items:center;gap:10px;background:var(--navy);color:#fff;padding:36px 64px;border-radius:18px;border:2px solid var(--neon);box-shadow:0 20px 60px rgba(0,0,0,.35);text-align:center;max-width:min(90vw,1100px)}
-.cel-tag{font:700 22px var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--neon)}
-.cel-name{font:800 clamp(36px,5vw,72px)/1.05 var(--f-display);text-transform:uppercase;text-wrap:balance}
-.cel-score{font:700 40px var(--f-display);color:var(--sky)}
-.cel-card .tchip{color:var(--sky);font-size:16px}
-.celebrate.big .cel-card{border-color:var(--salmon)}
-.celebrate.big .cel-tag{color:var(--salmon)}
-.celebrate.show .cel-card{animation:pop .6s cubic-bezier(.2,1.4,.4,1)}
-@keyframes pop{from{transform:scale(.8);opacity:0}to{transform:none;opacity:1}}
+.cel-rays{position:absolute;inset:-50%;background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--wc,#00F6ED) 22%,transparent) 0deg 8deg,transparent 8deg 24deg);animation:spin 40s linear infinite;opacity:.55;mask:radial-gradient(circle at center,#000 0 30%,transparent 62%);-webkit-mask:radial-gradient(circle at center,#000 0 30%,transparent 62%)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cel-card{position:relative;display:grid;justify-items:center;gap:12px;color:#fff;padding:40px 70px 44px;border-radius:22px;background:rgba(19,42,64,.72);border:2px solid var(--wc,#00F6ED);box-shadow:0 0 0 6px color-mix(in srgb,var(--wc,#00F6ED) 18%,transparent),0 30px 80px rgba(0,0,0,.45);text-align:center;max-width:min(92vw,1200px);animation:glow 2.6s ease-in-out infinite alternate}
+@keyframes glow{to{box-shadow:0 0 0 14px color-mix(in srgb,var(--wc,#00F6ED) 8%,transparent),0 0 60px color-mix(in srgb,var(--wc,#00F6ED) 45%,transparent),0 30px 80px rgba(0,0,0,.45)}}
+.cel-kick{font:800 20px var(--f-display);letter-spacing:.3em;text-transform:uppercase;color:#0F1E2C;background:var(--wc,#00F6ED);padding:6px 16px;border-radius:99px}
+.cel-tag{font:700 22px var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--sky)}
+.cel-trophy{width:96px;height:96px;fill:none;stroke:#E9806E;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:240;stroke-dashoffset:240;animation:draw 1.6s ease-out .2s forwards;filter:drop-shadow(0 0 12px rgba(233,128,110,.6))}
+@keyframes draw{to{stroke-dashoffset:0}}
+.cel-name{font:800 clamp(40px,6vw,92px)/1.02 var(--f-display);text-transform:uppercase;text-wrap:balance;letter-spacing:.01em}
+.cel-name span{display:inline-block;opacity:0;transform:translateY(24px);animation:rise .55s cubic-bezier(.2,1.2,.4,1) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+.cel-score{display:flex;align-items:baseline;gap:14px;font:800 64px/1 var(--f-display);color:#fff}
+.cel-score b:first-child{color:var(--wc,#00F6ED)}
+.cel-score span{color:var(--sky);font-weight:400}
+.cel-sets{font:500 20px var(--f-body);color:var(--sky);letter-spacing:.04em;min-height:1em}
+.cel-sets:empty,.cel-vs:empty{display:none}
+.cel-vs{font:400 22px var(--f-body);color:var(--sky)}
+.cel-team{margin-top:6px;padding:12px 22px;border-radius:14px;background:color-mix(in srgb,var(--wc,#00F6ED) 16%,transparent);animation:rise .6s ease-out .9s both}
+.team.cel .tsw{width:10px;height:56px}
+.team.cel .tname{color:#fff;font-size:34px}
+.team.cel .tcap{color:#fff;font-size:22px;font-weight:500;opacity:.92}
+.celebrate.big .cel-kick{background:#E9806E}
+.celebrate.big .cel-card{border-color:#E9806E}
+.celebrate.show .cel-card{animation:pop .7s cubic-bezier(.2,1.4,.4,1),glow 2.6s ease-in-out .7s infinite alternate}
+.celebrate.slide{z-index:3}
+@keyframes pop{from{transform:scale(.8);opacity:0}to{transform:none;opacity:1}}}
+
+/* Standings: leader and rank movement */
+tr.lead td{background:linear-gradient(90deg,rgba(233,128,110,.16),transparent 70%)}
+tr.lead td:first-child{box-shadow:inset 4px 0 0 var(--salmon)}
+.leadtag{display:inline-block;margin-left:10px;vertical-align:middle;font:800 11px var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:#fff;background:linear-gradient(90deg,var(--salmon),var(--rose));padding:2px 8px;border-radius:4px;position:relative;overflow:hidden}
+.leadtag::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);transform:translateX(-100%);animation:shimmer 3s ease-in-out infinite}
+.mv{display:block;font:700 11px var(--f-body);letter-spacing:0;margin-top:2px}
+.mv.up{color:var(--good);animation:nudge 1.4s ease-in-out 3}
+.mv.down{color:var(--bad)}
+@keyframes nudge{50%{transform:translateY(-3px)}}
+/* Knockout: winning side glows in its team colour */
+.tie.done .p.won{background:linear-gradient(90deg,color-mix(in srgb,var(--tc) 22%,transparent),transparent 80%);border-radius:6px;padding:4px 6px;margin:-4px -6px;animation:wonpulse 2.8s ease-in-out infinite alternate}
+@keyframes wonpulse{to{background:linear-gradient(90deg,color-mix(in srgb,var(--tc) 34%,transparent),transparent 85%)}}
 
 /* TV slideshow: each slide fits one 16:9 screen; a navy bar at the bottom shows the slide and a progress strip */
 .tvbar{display:none}
@@ -257,4 +288,6 @@ main.enter{animation:slidein .5s ease-out}
 .tv .tcard table td{padding:5px 6px}
 .tv .tcard table th{padding:5px 6px}
 .tv .toast{font-size:26px;padding:18px 28px;bottom:84px}
-@media (prefers-reduced-motion:reduce){.live i{animation:none}.progress b{transition:none}.tvbar b{display:none}.tie.champ::after,main.enter,.celebrate.show .cel-card,.list li.fresh{animation:none}}
+.tv .leadtag{font-size:14px}
+.tv .mv{font-size:14px}
+@media (prefers-reduced-motion:reduce){.live i{animation:none}.progress b{transition:none}.tvbar b{display:none}.tie.champ::after,main.enter,.celebrate.show .cel-card,.list li.fresh,.cel-rays,.cel-card,.leadtag::after,.mv.up,.tie.done .p.won{animation:none}.cel-name span{opacity:1;transform:none;animation:none}.cel-trophy{stroke-dashoffset:0;animation:none}}
