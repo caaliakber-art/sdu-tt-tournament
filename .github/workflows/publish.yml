@@ -44,6 +44,7 @@ jobs:
           cp index.html _site/
           cp -r assets data _site/
           touch _site/.nojekyll
+          python scripts/build_offline.py _site/tt-offline.html
 
       - uses: actions/configure-pages@v5
 

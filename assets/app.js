@@ -91,7 +91,7 @@
     $("progBar").style.width = (MATCHES.length ? played / MATCHES.length * 100 : 0) + "%";
     if (RES.updated) {
       const d = new Date(RES.updated);
-      $("liveTxt").textContent = isNaN(d) ? "Live" : `Updated ${d.getDate()} ${MON[d.getMonth()]}, ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+      $("liveTxt").textContent = (window.TT_OFFLINE ? "Offline copy · " : "") + (isNaN(d) ? "Live" : `Updated ${d.getDate()} ${MON[d.getMonth()]}, ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`);
     }
   }
   // Best Team scoring, as in the scorecard: 1 per league win, 1 per quarterfinal or semifinal win,
@@ -503,7 +503,8 @@
   let toastT = null;
   function toast(msg) { $("toast").textContent = msg; $("toast").hidden = false; clearTimeout(toastT); toastT = setTimeout(() => $("toast").hidden = true, 9000) }
 
-  async function getJSON(path) { const r = await fetch(`${path}?t=${Date.now()}`, { cache: "no-store" }); if (!r.ok) throw new Error(path + " " + r.status); return r.json() }
+  // The offline file (tt-offline.html) carries its data in window.TT_OFFLINE instead of fetching it.
+  async function getJSON(path) { const off = window.TT_OFFLINE; if (off && off[path]) return JSON.parse(JSON.stringify(off[path])); const r = await fetch(`${path}?t=${Date.now()}`, { cache: "no-store" }); if (!r.ok) throw new Error(path + " " + r.status); return r.json() }
   async function refresh(first) {
     try {
       const [fx, res, cfg, ko] = await Promise.all([getJSON("data/fixtures.json"), getJSON("data/results.json"), getJSON("data/config.json"), getJSON("data/knockout.json").catch(() => ({ ties: [] }))]);

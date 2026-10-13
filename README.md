@@ -51,7 +51,13 @@ Everyone in the channel sees the live page without signing in to anything new. F
 ### Office TV slideshow
 
 Open the site address ending in `#tv` (for example `https://caaliakber-art.github.io/sdu-tt-tournament/#tv`) on the TV's browser, a laptop connected by HDMI, or a casting stick, and make the browser full screen (F11 on a laptop).
+Use a laptop or mini PC plugged into the TV by HDMI and open the page in its browser. Avoid Teams screen sharing for the TV: it compresses the animations, adds lag, and stops when the sharer's laptop sleeps or joins a call. A Fire TV Stick or Android TV box with a browser also works with the address directly.
+
 It loops by itself: team standings and recent results, then each of the 7 events (group table and knockout draw), then the team cards. Each slide shows for 12 seconds (`tv_seconds` in `data/config.json`). New scores appear within a minute. Arrow keys skip slides; Esc exits. When a new score arrives the TV shows a short result banner with confetti, and a final win gets a Champion banner. Click **Chime off** once before entering TV mode to turn on a soft chime for new results (off by default).
+
+### Offline copy (no internet at the TV)
+
+Every publish also produces `tt-offline.html` (download it from `https://caaliakber-art.github.io/sdu-tt-tournament/tt-offline.html`, or run `python scripts/build_offline.py`). It is the whole site in one file: copy it to the TV laptop or a pen drive, double-click it, and click **TV mode**. It needs no internet, but its scores are frozen at the time it was made, so download a fresh copy after each scorecard update. The status chip reads "Offline copy" so nobody mistakes it for the live page.
 
 ### Today's matches (celebrations on the TV)
 
@@ -96,7 +102,9 @@ This repository and site are public. They contain player names, teams, fixtures,
 
 - `index.html`, `assets/styles.css`, `assets/app.js`: the site. Plain HTML, CSS and JavaScript, no build step.
 - `scripts/update_scores.py`: reads `scores/Score_Card.xlsx` and writes `data/fixtures.json` and `data/results.json`.
-- `.github/workflows/publish.yml`: on every commit, runs the script and publishes the site to GitHub Pages.
+- `scripts/build_offline.py`: packs the site and current scores into the single offline file `tt-offline.html`.
+- `assets/fonts`: Roboto and Roboto Condensed (SIL Open Font License), self-hosted so the site does not depend on Google Fonts.
+- `.github/workflows/publish.yml`: on every commit, runs the scripts and publishes the site to GitHub Pages.
 
 To preview locally: `python scripts/update_scores.py && python -m http.server`, then open http://localhost:8000.
 

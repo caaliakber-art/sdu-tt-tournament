@@ -1,5 +1,5 @@
-__pycache__/
 *.pyc
-_site/
 .DS_Store
+__pycache__/
+_site/
 ~$*.xlsx

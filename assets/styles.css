@@ -1,6 +1,13 @@
 /* SDU TT Tournament site.
    Palette: Yale Blue #204262 (primary), Pale Sky #CAD8DE (rules, tints), Neon Ice #00F6ED (live, qualified),
    Salmon #E9806E (top-4 cut line), Blush Rose #E75A7C (eliminated). Fonts: Roboto and Roboto Condensed only. */
+/* Fonts are self-hosted so the site also works where Google Fonts is blocked, and offline. */
+@font-face{font-family:"Roboto";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/roboto-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Roboto";font-style:normal;font-weight:500;font-display:swap;src:url(fonts/roboto-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Roboto";font-style:normal;font-weight:700;font-display:swap;src:url(fonts/roboto-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Roboto Condensed";font-style:normal;font-weight:500;font-display:swap;src:url(fonts/roboto-condensed-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Roboto Condensed";font-style:normal;font-weight:700;font-display:swap;src:url(fonts/roboto-condensed-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Roboto Condensed";font-style:normal;font-weight:800;font-display:swap;src:url(fonts/roboto-condensed-latin-800-normal.woff2) format("woff2")}
 :root{
   --navy:#204262; --neon:#00F6ED; --sky:#CAD8DE; --salmon:#E9806E; --rose:#E75A7C;
   --accent:#204262; --on-accent:#ffffff;
