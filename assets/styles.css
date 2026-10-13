@@ -12,12 +12,18 @@
   --f-body:"Roboto",system-ui,-apple-system,"Segoe UI",sans-serif;
   color-scheme:light;
 }
-@media (prefers-color-scheme:dark){:root{
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --accent:#00F6ED; --on-accent:#132A40;
   --bg:#132A40; --surface:#1A3651; --fg:#F2F5F7; --muted:#A9BFD1; --rule:#2C5070; --zebra:#20405F;
   --sel-bg:#CAD8DE; --sel-fg:#204262; --tag-bg:rgba(202,216,222,.14); --tag-fg:#CAD8DE;
   --good:#00F6ED; --good-soft:rgba(0,246,237,.14); --bad:#F08AA3; --bad-soft:rgba(231,90,124,.2); --t1:#5A86B3;
   color-scheme:dark}}
+:root[data-theme="dark"]{
+  --accent:#00F6ED; --on-accent:#132A40;
+  --bg:#132A40; --surface:#1A3651; --fg:#F2F5F7; --muted:#A9BFD1; --rule:#2C5070; --zebra:#20405F;
+  --sel-bg:#CAD8DE; --sel-fg:#204262; --tag-bg:rgba(202,216,222,.14); --tag-fg:#CAD8DE;
+  --good:#00F6ED; --good-soft:rgba(0,246,237,.14); --bad:#F08AA3; --bad-soft:rgba(231,90,124,.2); --t1:#5A86B3;
+  color-scheme:dark}
 
 *{box-sizing:border-box}
 html,body{margin:0}
