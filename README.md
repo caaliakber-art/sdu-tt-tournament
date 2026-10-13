@@ -1,0 +1,89 @@
+# SDU TT Tournament 2026
+
+Website for the Singhvi Dev & Unni LLP office table tennis tournament. It has four tabs:
+
+| Tab | What it shows | Where the data comes from |
+|---|---|---|
+| **Home** | Team standings, recent results, next matches, group standings per event, projected knockout draw | `scores/Score_Card.xlsx` |
+| **Teams** | Each team's players by event, with group position and win-loss | `scores/Score_Card.xlsx` and `data/config.json` |
+| **Photos** | Buttons to upload photos and open the shared album | OneDrive links in `data/config.json` |
+| **Availability** | Each player's remaining matches, a link to the availability form, coordinator contact | `scores/Score_Card.xlsx` and `data/config.json` |
+
+Photos and availability answers are never stored on this site. They stay in Microsoft 365 behind SDU sign-in; the site only links to them.
+
+The site checks for new scores every minute, so a TV or an open Teams tab updates by itself.
+
+---
+
+## 1. Updating scores (after each session)
+
+1. Open the repository on GitHub and go into the **scores** folder.
+2. Click **Add file > Upload files**.
+3. Drag in the latest **Score_Card.xlsx**. Keep that exact file name so it replaces the old one.
+4. Click **Commit changes**.
+
+About a minute later the site shows the new scores. You can watch progress under the **Actions** tab (green tick = live).
+
+Rules for the Excel file:
+
+- Keep the sheet named **Shuffled Matches** and keep the rows in the same order. Row order is the match number.
+- Enter scores as `21-15` (Team 1 score first). Leave the score blank for matches not yet played.
+- If something looks wrong (a typo, a winner that does not match the score), the Actions log lists it as a warning. The score column is always treated as the truth.
+
+## 2. One-time setup
+
+### Turn on the website (GitHub Pages)
+
+Repository **Settings > Pages > Build and deployment > Source: GitHub Actions**.
+The site address is `https://caaliakber-art.github.io/sdu-tt-tournament/`.
+
+### Add it to Microsoft Teams
+
+In the tournament channel, click **+** (Add a tab) > **Website**, name it `TT Tournament`, paste the site address, Save.
+Everyone in the channel sees the live page without signing in to anything new. For the office TV, open the site in a browser and press **TV mode**, or open the address ending in `#tv`.
+
+### Availability form (Microsoft Forms)
+
+1. Go to forms.office.com and create a form called **TT Tournament: my availability** with:
+   - Your name (text)
+   - Event (choice: Women's Singles, Women's Doubles, Mixed Doubles, Men's Singles 1, Men's Singles 2, Men's Doubles 1, Men's Doubles 2)
+   - Days you can play (multiple choice: Day 1 to Day 8)
+   - Session (multiple choice: Lunch break, Post office hours)
+   - Anything else (text, optional)
+2. Settings: **Only people in my organisation can respond**, and tick **Record name**.
+3. Click **Collect responses**, copy the link, and paste it into `availability_form_url` in `data/config.json`.
+
+Responses land in an Excel file in the coordinator's OneDrive.
+
+### Photo upload and album (OneDrive or SharePoint)
+
+1. In OneDrive (or the Teams channel's Files tab), create a folder **TT Tournament 2026 Photos**.
+2. Upload link: right-click the folder > **Request files** > copy the link into `photos_upload_url`. People can add photos without seeing or changing anyone else's.
+3. Album link: right-click the folder > **Share** > **People in Singhvi Dev & Unni LLP** > copy the link into `photos_album_url`.
+
+### Coordinator, team names and captains
+
+Edit `data/config.json` on GitHub (open the file, click the pencil icon, edit, **Commit changes**):
+
+```json
+"coordinator": { "name": "Full name", "email": "name@sdu.works" },
+"team_names":  { "1": "Team 1", ... },
+"captains":    { "1": "Captain name", ... },
+"day_dates":   { "1": "2026-10-05", "2": "2026-10-06" }
+```
+
+`day_dates` is optional. When set, matches show the date, for example "Day 1, Mon 5 Oct".
+
+## 3. Privacy
+
+This repository and site are public. They contain player names, teams, fixtures and scores only. Do not upload photos or personal contact details other than the coordinator's work email to this repository.
+
+## 4. How it is built
+
+- `index.html`, `assets/styles.css`, `assets/app.js`: the site. Plain HTML, CSS and JavaScript, no build step.
+- `scripts/update_scores.py`: reads `scores/Score_Card.xlsx` and writes `data/fixtures.json` and `data/results.json`.
+- `.github/workflows/publish.yml`: on every commit, runs the script and publishes the site to GitHub Pages.
+
+To preview locally: `python scripts/update_scores.py && python -m http.server`, then open http://localhost:8000.
+
+Brand: Roboto and Roboto Condensed; Yale Blue #204262 with Pale Sky #CAD8DE, Neon Ice #00F6ED, Salmon #E9806E and Blush Rose #E75A7C.

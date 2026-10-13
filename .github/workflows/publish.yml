@@ -1,0 +1,55 @@
+name: Publish site
+
+# Runs whenever anything is committed to main (for example a new scores/Score_Card.xlsx
+# uploaded through the GitHub website), and can also be run by hand from the Actions tab.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Convert scorecard to site data
+        run: |
+          pip install --quiet openpyxl
+          if [ -f scores/Score_Card.xlsx ]; then
+            python scripts/update_scores.py scores/Score_Card.xlsx data
+          else
+            echo "No scores/Score_Card.xlsx found; publishing the data already in the repo."
+          fi
+
+      - name: Prepare site folder
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          cp -r assets data _site/
+          touch _site/.nojekyll
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deploy
+        uses: actions/deploy-pages@v4

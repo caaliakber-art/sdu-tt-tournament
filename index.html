@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>TT Tournament 2026 | SDU</title>
+<meta name="description" content="Live standings, teams, photos and match availability for the SDU office table tennis tournament.">
+<link rel="icon" type="image/png" href="assets/sdu-stripe.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@500;700;800&family=Roboto:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<header class="band">
+  <div class="sdubars" aria-hidden="true"></div>
+  <div class="wrap topline">
+    <img class="logo" src="assets/sdu-logo-white.png" alt="Singhvi Dev &amp; Unni LLP, Chartered Accountants" width="515" height="235">
+    <button class="btn" id="tvBtn" type="button">TV mode</button>
+  </div>
+  <div class="wrap brand">
+    <span class="live off" id="live"><i></i><span id="liveTxt">Loading</span></span>
+    <h1 id="title">TT Tournament 2026</h1>
+    <p id="progTxt">League stage</p>
+    <div class="progress"><b id="progBar" style="width:0%"></b></div>
+  </div>
+  <nav class="wrap nav notv" aria-label="Sections">
+    <a href="#home" data-view="home">Home</a>
+    <a href="#teams" data-view="teams">Teams</a>
+    <a href="#photos" data-view="photos">Photos</a>
+    <a href="#availability" data-view="availability">Availability</a>
+  </nav>
+  <div class="sdubars" aria-hidden="true"></div>
+</header>
+
+<main class="wrap">
+  <!-- HOME -->
+  <section class="view" id="view-home">
+    <div class="grid2">
+      <div class="card">
+        <div class="head"><h2>Team standings</h2><span class="sub">Ranked on match wins</span></div>
+        <div class="tablewrap"><table id="teamTbl"><thead><tr><th class="c">Pos</th><th class="l">Team</th><th>P</th><th>W</th><th>L</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="card">
+        <div class="head"><h2 id="rTitle">Recent results</h2>
+          <div class="seg notv" role="group" aria-label="Results or next matches"><button type="button" id="segRes" aria-pressed="true">Results</button><button type="button" id="segNext" aria-pressed="false">Next up</button></div>
+        </div>
+        <div class="cardbody"><ul class="list" id="feed"></ul></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="head"><h2 id="evTitle">Event</h2><span class="sub" id="evSub"></span></div>
+      <div class="tabs notv" role="tablist" id="evTabs"></div>
+      <div class="evgrid">
+        <div>
+          <h3 class="sec">Group standings</h3>
+          <div class="tablewrap"><table id="stand"><thead><tr><th class="c">Pos</th><th class="l">Player / Pair</th><th>P</th><th>W</th><th>L</th><th title="Points for">PF</th><th title="Points against">PA</th><th class="c"><span class="vh">Status</span></th></tr></thead><tbody></tbody></table></div>
+          <div class="legend"><span><span class="q in">Q</span>Qualified</span><span><span class="q out">E</span>Eliminated</span><span><i class="cutkey"></i>Top 4 advance · ties split on points for</span></div>
+        </div>
+        <div class="notv">
+          <h3 class="sec">Matches</h3>
+          <ul class="list" id="evMatches"></ul>
+        </div>
+      </div>
+      <h3 class="sec pad" id="brTitle">Knockout draw</h3>
+      <div class="draw" id="bracket"></div>
+    </div>
+  </section>
+
+  <!-- TEAMS -->
+  <section class="view" id="view-teams" hidden>
+    <div class="intro"><h2>Teams</h2><p>Who plays which event for each team, with their group position so far.</p></div>
+    <div class="teamgrid" id="teamGrid"></div>
+  </section>
+
+  <!-- PHOTOS -->
+  <section class="view" id="view-photos" hidden>
+    <div class="intro"><h2>Photos</h2><p>Share your shots from the tables. Everything goes into one shared SDU album.</p></div>
+    <div class="grid2">
+      <div class="card action">
+        <div class="cardbody">
+          <h3>Upload your photos</h3>
+          <p>Opens the tournament folder in OneDrive. Add as many photos or short videos as you like.</p>
+          <a class="cta" id="photoUp" target="_blank" rel="noopener">Upload photos</a>
+          <p class="soon" id="photoUpSoon" hidden>The upload link will appear here soon.</p>
+        </div>
+      </div>
+      <div class="card action">
+        <div class="cardbody">
+          <h3>See the album</h3>
+          <p>Browse everyone's photos. You may be asked to sign in with your SDU Microsoft account.</p>
+          <a class="cta ghost" id="photoAlbum" target="_blank" rel="noopener">Open the album</a>
+          <p class="soon" id="photoAlbumSoon" hidden>The album link will appear here soon.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AVAILABILITY -->
+  <section class="view" id="view-availability" hidden>
+    <div class="intro"><h2>Availability</h2><p>Find your remaining matches. If a slot does not work for you, tell the coordinator before the day.</p></div>
+    <div class="grid2">
+      <div class="card">
+        <div class="head"><h2>Your matches</h2></div>
+        <div class="cardbody">
+          <label class="fld" for="who">Your name</label>
+          <select id="who"><option value="">Choose your name</option></select>
+          <div id="myMatches"></div>
+        </div>
+      </div>
+      <div class="side">
+        <div class="card action">
+          <div class="cardbody">
+            <h3>Can't make a slot?</h3>
+            <p>Tell us which days and sessions (lunch break or post office hours) work for you. The coordinator will rearrange where possible.</p>
+            <a class="cta" id="formLink" target="_blank" rel="noopener">Share my availability</a>
+            <p class="soon" id="formSoon" hidden>The availability form will appear here soon. Until then, contact the coordinator below.</p>
+          </div>
+        </div>
+        <div class="card action">
+          <div class="cardbody">
+            <h3>Contact the coordinator</h3>
+            <div id="coord"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="sdufoot">
+  <div class="sdubars" aria-hidden="true"></div>
+  <div class="wrap">
+    <img class="flogo" src="assets/sdu-logo-white.png" alt="Singhvi Dev &amp; Unni LLP" width="515" height="235">
+    <span><b>BENGALURU | MUMBAI</b> &nbsp;·&nbsp; www.sdu.works</span>
+  </div>
+</footer>
+<div class="toast" id="toast" role="status" hidden></div>
+<script src="assets/app.js" defer></script>
+</body>
+</html>
