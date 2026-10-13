@@ -48,6 +48,11 @@ The site address is `https://caaliakber-art.github.io/sdu-tt-tournament/`.
 In the tournament channel, click **+** (Add a tab) > **Website**, name it `TT Tournament`, paste the site address, Save.
 Everyone in the channel sees the live page without signing in to anything new. For the office TV, open the site in a browser and press **TV mode**, or open the address ending in `#tv`.
 
+### Office TV slideshow
+
+Open the site address ending in `#tv` (for example `https://caaliakber-art.github.io/sdu-tt-tournament/#tv`) on the TV's browser, a laptop connected by HDMI, or a casting stick, and make the browser full screen (F11 on a laptop).
+It loops by itself: team standings and recent results, then each of the 7 events (group table and knockout draw), then the team cards. Each slide shows for 12 seconds (`tv_seconds` in `data/config.json`). New scores appear within a minute. Arrow keys skip slides; Esc exits.
+
 ### Optional: photos tab (OneDrive or SharePoint)
 
 The Photos tab stays hidden until a link is set. To turn it on:
@@ -63,6 +68,7 @@ Edit `data/config.json` on GitHub (open the file, click the pencil icon, edit, *
 ```json
 "coordinator": { "name": "Akshith Tholakapalli", "email": "akshiththolakpalli@sdu.works" },
 "team_names":  { "1": "Team 1", ... },
+"captains":    { "1": "Captain name", ... },
 "day_dates":   { "1": "2026-10-05", "2": "2026-10-06" }
 ```
 

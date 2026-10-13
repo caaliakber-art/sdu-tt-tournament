@@ -14,6 +14,8 @@
 
   const teamName = t => (CFG.team_names && CFG.team_names[t]) || `Team ${t}`;
   const chip = t => `<span class="tchip" style="--tc:var(--t${t})"><i></i>${esc(teamName(t))}</span>`;
+  const captain = t => (CFG.captains && CFG.captains[t]) || "";
+  const capLine = t => captain(t) ? `<div class="capt">Capt. ${esc(captain(t))}</div>` : "";
   const nm = (f, t) => (ROSTER[f] && ROSTER[f][t]) || `Team ${t}`;
   const evName = k => (EVENTS.find(e => e.k === k) || { n: k }).n;
   const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -105,7 +107,7 @@
     const order = teamScores();
     let rank = 0, prev = null;
     $("teamTbl").tBodies[0].innerHTML = order.map((r, i) => { if (r.pts !== prev) { rank = i + 1; prev = r.pts }
-      return `<tr><td class="rk">${rank}</td><td class="l">${chip(r.t)}</td><td>${r.lw}</td><td>${r.ko}</td><td>${r.bonus}</td><td class="big">${r.pts}</td></tr>` }).join("");
+      return `<tr><td class="rk">${rank}</td><td class="l">${chip(r.t)}${capLine(r.t)}</td><td>${r.lw}</td><td>${r.ko}</td><td>${r.bonus}</td><td class="big">${r.pts}</td></tr>` }).join("");
     if (feedMode === "res") {
       $("rTitle").textContent = "Recent results";
       const kos = KO.filter(k => k.winner).slice().reverse();
@@ -183,7 +185,7 @@
         const pos = tables[e.k].findIndex(r => r.t === t) + 1, row = tables[e.k][pos - 1];
         return `<tr><td class="ev">${esc(e.k)}</td><td class="l">${esc(nm(e.k, t))}</td><td>${row.p ? ord(pos) : "–"}</td><td>${row.w}-${row.l}</td></tr>`;
       }).join("");
-      return `<div class="card tcard" style="--tc:var(--t${t})"><div class="thead"><span class="sw"></span><div><h3>${esc(teamName(t))}</h3><div class="cap">${cap ? `Captain: ${esc(cap)}` : `${played[t]} played · ${wins[t]} won`}</div></div><div class="rank">${ord(trank[t])}<small>${tpts[t]} pts</small></div></div>
+      return `<div class="card tcard" style="--tc:var(--t${t})"><div class="thead"><span class="sw"></span><div><h3>${esc(teamName(t))}</h3><div class="cap">${cap ? `Captain: <b>${esc(cap)}</b> · ` : ""}${played[t]} played · ${wins[t]} won</div></div><div class="rank">${ord(trank[t])}<small>${tpts[t]} pts</small></div></div>
         <div class="tablewrap"><table><thead><tr><th class="l">Event</th><th class="l">Player / Pair</th><th>Pos</th><th>W-L</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
     }).join("");
   }
@@ -247,20 +249,37 @@
   }
   function renderAll() { if (!FX) return; renderHeader(); renderTop(); renderEvent(); renderTeams(); renderPhotos(); renderAvailability() }
 
-  let wake = null;
-  function tvTick() { curEv = EVENTS[tvIdx % EVENTS.length].k; tvIdx++; renderEvent() }
+  /* TV slideshow: overview, then each event (group table + knockout), then the team cards. */
+  let wake = null, tvSlide = -1, tvDur = 12000;
+  const isTv = () => document.documentElement.classList.contains("tv");
+  const slides = () => [{ k: "overview", label: "Team standings and results" }, ...EVENTS.map(e => ({ k: "event", ev: e.k, label: e.n })), { k: "teams", label: "Teams" }];
+  function showSlide(i) {
+    if (!EVENTS.length) return;
+    const list = slides(); tvSlide = ((i % list.length) + list.length) % list.length; const s = list[tvSlide];
+    document.documentElement.dataset.slide = s.k;
+    VIEWS.forEach(x => $("view-" + x).hidden = x !== (s.k === "teams" ? "teams" : "home"));
+    if (s.k === "event") { curEv = s.ev; renderEvent() }
+    $("tvLabel").textContent = s.label;
+    $("tvDots").innerHTML = list.map((_, j) => `<i class="${j === tvSlide ? "on" : ""}"></i>`).join("");
+    const bar = $("tvProg"); bar.style.animation = "none"; void bar.offsetWidth; bar.style.animation = `tvprog ${tvDur}ms linear forwards`;
+    window.scrollTo(0, 0);
+  }
+  function tvTick() { showSlide(tvSlide + 1) }
+  function tvRestart() { clearInterval(tvTimer); tvTimer = setInterval(tvTick, tvDur) }
   async function setTv(on) {
     document.documentElement.classList.toggle("tv", on);
     $("tvBtn").textContent = on ? "Exit TV mode" : "TV mode";
     clearInterval(tvTimer);
     if (on) {
-      VIEWS.forEach(x => $("view-" + x).hidden = x !== "home");
-      tvTick(); tvTimer = setInterval(tvTick, 12000);
+      tvDur = Math.max(5, Number(CFG.tv_seconds) || 12) * 1000;
+      tvSlide = -1; tvTick(); tvRestart();
       try { await document.documentElement.requestFullscreen() } catch (_) {}
       try { wake = await navigator.wakeLock.request("screen") } catch (_) {}
     } else {
       try { if (document.fullscreenElement) await document.exitFullscreen() } catch (_) {}
       try { wake && wake.release() } catch (_) {}
+      delete document.documentElement.dataset.slide; tvSlide = -1;
+      if (location.hash === "#tv") history.replaceState(null, "", "#home");
       route();
     }
   }
@@ -281,6 +300,7 @@
         if (m) { const r = R[m.id], w = r[0] > r[1] ? m.a : m.b; toast(newIds.length > 1 ? `${newIds.length} new results in` : `${nm(m.f, w)} (${teamName(w)}) win ${Math.max(...r)}-${Math.min(...r)} · ${evName(m.f)}`) }
       }
       if (first || res.updated !== lastUpdated) renderAll();
+      if (isTv()) { if (first) tvDur = Math.max(5, Number(CFG.tv_seconds) || 12) * 1000; if (tvSlide < 0) { showSlide(0); tvRestart() } }
       lastUpdated = res.updated;
     } catch (e) {
       $("live").classList.add("off");
@@ -296,7 +316,12 @@
   $("segNext").onclick = () => { feedMode = "next"; $("segNext").setAttribute("aria-pressed", "true"); $("segRes").setAttribute("aria-pressed", "false"); renderTop() };
   $("who").addEventListener("change", () => { store.set("tt_who", $("who").value); renderMine() });
   $("tvBtn").onclick = () => setTv(!document.documentElement.classList.contains("tv"));
-  document.addEventListener("keydown", e => { if (e.key === "Escape" && document.documentElement.classList.contains("tv")) setTv(false) });
+  document.addEventListener("keydown", e => {
+    if (!isTv()) return;
+    if (e.key === "Escape") setTv(false);
+    else if (e.key === "ArrowRight") { showSlide(tvSlide + 1); tvRestart() }
+    else if (e.key === "ArrowLeft") { showSlide(tvSlide - 1); tvRestart() }
+  });
   window.addEventListener("hashchange", route);
 
   route();
