@@ -1,4 +1,5 @@
-/* SDU TT Tournament site. Reads data/fixtures.json, data/results.json and data/config.json.
+/* SDU TT Tournament site. Reads data/fixtures.json, data/results.json, data/knockout.json and data/config.json.
+   Ranking follows the coordinator's scorecard: 2 points per win; ties split on point difference, then team number.
    Scores refresh automatically; the page never needs a reload during the tournament. */
 (() => {
   "use strict";
@@ -7,7 +8,7 @@
   const store = { get(k) { try { return localStorage.getItem(k) } catch (_) { return null } }, set(k, v) { try { localStorage.setItem(k, v) } catch (_) {} } };
 
   let FX = null, RES = { results: {} }, CFG = {}, R = {};
-  let EVENTS = [], ROSTER = {}, MATCHES = [];
+  let EVENTS = [], ROSTER = {}, MATCHES = [], KO = [];
   const TEAMS = [1, 2, 3, 4, 5, 6];
   let curEv = store.get("tt_ev") || "MD1", feedMode = "res", tvIdx = 0, tvTimer = null, lastUpdated = null;
 
@@ -33,19 +34,21 @@
       A.p++; B.p++; A.pf += r[0]; A.pa += r[1]; B.pf += r[1]; B.pa += r[0];
       if (r[0] > r[1]) { A.w++; B.l++ } else { B.w++; A.l++ }
     }
-    return rows.sort((x, y) => y.w - x.w || y.pf - x.pf || (y.pf - y.pa) - (x.pf - x.pa) || x.t - y.t);
+    rows.forEach(r => { r.d = r.pf - r.pa; r.pts = 2 * r.w });
+    return rows.sort((x, y) => y.w - x.w || y.d - x.d || x.t - y.t);
   }
   // Q = top 4 in every possible outcome of the remaining matches; E = cannot reach top 4.
-  // Ties on wins are split on points for. A player's points for can only grow, so a tie is
-  // treated as settled only when the player who is behind has no matches left.
+  // Ties on wins are split on point difference, then team number. Difference can move either way
+  // while a player still has matches, so a tie counts as settled only when both have finished.
   const groupDone = f => MATCHES.every(m => m.f !== f || R[m.id]);
   function status(f) {
-    const base = {}, pf = {}, left = {}; TEAMS.forEach(t => { base[t] = 0; pf[t] = 0; left[t] = 0 });
+    const base = {}, d = {}, left = {}; TEAMS.forEach(t => { base[t] = 0; d[t] = 0; left[t] = 0 });
     const rem = [];
     for (const m of MATCHES) {
       if (m.f !== f) continue; const r = R[m.id];
-      if (r) { base[r[0] > r[1] ? m.a : m.b]++; pf[m.a] += r[0]; pf[m.b] += r[1] } else { rem.push(m); left[m.a]++; left[m.b]++ }
+      if (r) { base[r[0] > r[1] ? m.a : m.b]++; d[m.a] += r[0] - r[1]; d[m.b] += r[1] - r[0] } else { rem.push(m); left[m.a]++; left[m.b]++ }
     }
+    const beats = (o, t) => d[o] > d[t] || (d[o] === d[t] && o < t);   // o ranks above t on the tiebreak
     const thru = {}, out = {}; TEAMS.forEach(t => { thru[t] = true; out[t] = true });
     if (rem.length > 16) { TEAMS.forEach(t => { thru[t] = false; out[t] = false }) }
     else for (let mask = 0; mask < (1 << rem.length); mask++) {
@@ -57,8 +60,9 @@
           if (o === t) continue;
           if (w[o] > w[t]) { maybeAhead++; surelyAhead++; continue }
           if (w[o] < w[t]) continue;
-          if (!(left[o] === 0 && pf[o] < pf[t])) maybeAhead++;          // o could still edge t on points
-          if (left[t] === 0 && pf[o] > pf[t]) surelyAhead++;            // t can no longer catch o
+          const settled = left[o] === 0 && left[t] === 0;
+          if (!settled || beats(o, t)) maybeAhead++;
+          if (settled && beats(o, t)) surelyAhead++;
         }
         if (maybeAhead > 3) thru[t] = false;
         if (surelyAhead < 4) out[t] = false;
@@ -75,22 +79,40 @@
   /* ---------- HOME ---------- */
   function renderHeader() {
     const played = Object.keys(R).length;
-    $("progTxt").textContent = `League stage · ${played} of ${MATCHES.length} matches played`;
+    const koDone = KO.filter(k => k.winner).length;
+    $("progTxt").textContent = koDone ? `Knockouts under way · league ${played} of ${MATCHES.length} played` : `League stage · ${played} of ${MATCHES.length} matches played`;
     $("progBar").style.width = (MATCHES.length ? played / MATCHES.length * 100 : 0) + "%";
     if (RES.updated) {
       const d = new Date(RES.updated);
       $("liveTxt").textContent = isNaN(d) ? "Live" : `Updated ${d.getDate()} ${MON[d.getMonth()]}, ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
     }
   }
+  // Best Team scoring, as in the scorecard: 1 per league win, 1 per quarterfinal or semifinal win,
+  // 5 for an event title, 3 for runner-up (a final win does not also earn the 1 point).
+  function teamScores() {
+    const s = {}; TEAMS.forEach(t => s[t] = { t, lw: 0, ko: 0, bonus: 0, d: 0 });
+    for (const m of MATCHES) { const r = R[m.id]; if (!r) continue; s[r[0] > r[1] ? m.a : m.b].lw++; s[m.a].d += r[0] - r[1]; s[m.b].d += r[1] - r[0] }
+    for (const k of KO) {
+      if (!k.winner) continue;
+      const wt = k.winner === 1 ? k.t1 : k.t2, lt = k.winner === 1 ? k.t2 : k.t1;
+      if (/^final/i.test(k.round)) { if (s[wt]) s[wt].bonus += 5; if (s[lt]) s[lt].bonus += 3 }
+      else if (s[wt]) s[wt].ko++;
+    }
+    Object.values(s).forEach(r => r.pts = r.lw + r.ko + r.bonus);
+    return Object.values(s).sort((a, b) => b.pts - a.pts || a.t - b.t);
+  }
   function renderTop() {
-    const s = {}; TEAMS.forEach(t => s[t] = { t, p: 0, w: 0, pf: 0 });
-    for (const m of MATCHES) { const r = R[m.id]; if (!r) continue; s[m.a].p++; s[m.b].p++; s[m.a].pf += r[0]; s[m.b].pf += r[1]; s[r[0] > r[1] ? m.a : m.b].w++ }
-    const order = Object.values(s).sort((a, b) => b.w - a.w || b.pf - a.pf || a.t - b.t);
-    $("teamTbl").tBodies[0].innerHTML = order.map((r, i) => `<tr><td class="rk">${i + 1}</td><td class="l">${chip(r.t)}</td><td>${r.p}</td><td class="big">${r.w}</td><td>${r.p - r.w}</td></tr>`).join("");
+    const order = teamScores();
+    let rank = 0, prev = null;
+    $("teamTbl").tBodies[0].innerHTML = order.map((r, i) => { if (r.pts !== prev) { rank = i + 1; prev = r.pts }
+      return `<tr><td class="rk">${rank}</td><td class="l">${chip(r.t)}</td><td>${r.lw}</td><td>${r.ko}</td><td>${r.bonus}</td><td class="big">${r.pts}</td></tr>` }).join("");
     if (feedMode === "res") {
       $("rTitle").textContent = "Recent results";
-      const list = MATCHES.filter(m => R[m.id]).sort((a, b) => b.id - a.id).slice(0, 6);
-      $("feed").innerHTML = list.length ? list.map(m => `<li><span class="meta"><span class="tag">${esc(m.f)}</span>${slotTxt(m)}</span>${pairLine(m, R[m.id])}</li>`).join("") : '<li class="empty">No results yet.</li>';
+      const kos = KO.filter(k => k.winner).slice().reverse();
+      const list = MATCHES.filter(m => R[m.id]).sort((a, b) => b.id - a.id).slice(0, Math.max(0, 6 - kos.length));
+      const koItems = kos.slice(0, 6).map(k => `<li><span class="meta"><span class="tag">${esc(koTag(k))}</span>${esc(k.format)} · ${esc(k.round)}</span><span class="${k.winner === 1 ? "won" : ""}">${esc(k.c1)}</span><span class="sc">${k.w1 ?? ""}-${k.w2 ?? ""}</span><span class="r ${k.winner === 2 ? "won" : ""}">${esc(k.c2)}</span></li>`);
+      const items = koItems.concat(list.map(m => `<li><span class="meta"><span class="tag">${esc(m.f)}</span>${slotTxt(m)}</span>${pairLine(m, R[m.id])}</li>`));
+      $("feed").innerHTML = items.length ? items.join("") : '<li class="empty">No results yet.</li>';
     } else {
       $("rTitle").textContent = "Next up";
       const nx = MATCHES.find(m => !R[m.id]);
@@ -105,23 +127,43 @@
     const ms = MATCHES.filter(m => m.f === f);
     $("evSub").textContent = `${ms.filter(m => R[m.id]).length} of ${ms.length} matches played`;
     $("evTabs").innerHTML = EVENTS.map(e => `<button role="tab" class="tab" aria-selected="${e.k === f}" data-ev="${esc(e.k)}">${esc(e.n)}</button>`).join("");
-    $("stand").tBodies[0].innerHTML = tb.map((r, i) => `<tr class="${i === 3 ? "cut" : ""}"><td class="rk">${i + 1}</td><td class="l"><div class="nm">${esc(nm(f, r.t))}</div>${chip(r.t)}</td><td>${r.p}</td><td class="big">${r.w}</td><td>${r.l}</td><td>${r.pf}</td><td>${r.pa}</td><td class="c">${qBadge(st[r.t])}</td></tr>`).join("");
+    $("stand").tBodies[0].innerHTML = tb.map((r, i) => `<tr class="${i === 3 ? "cut" : ""}"><td class="rk">${i + 1}</td><td class="l"><div class="nm">${esc(nm(f, r.t))}</div>${chip(r.t)}</td><td>${r.p}</td><td>${r.w}</td><td>${r.l}</td><td>${r.d > 0 ? "+" : ""}${r.d}</td><td class="big">${r.pts}</td><td class="c">${qBadge(st[r.t])}</td></tr>`).join("");
     $("evMatches").innerHTML = ms.slice().sort((x, y) => (!!R[y.id]) - (!!R[x.id]) || x.id - y.id).map(m => `<li><span class="meta">${slotTxt(m)}</span>${pairLine(m, R[m.id])}</li>`).join("");
     renderBracket(f);
   }
+  const ROUND_SHORT = r => r.replace(/^quarterfinal\s*/i, "QF").replace(/^semifinal\s*/i, "SF").replace(/^final$/i, "Final");
+  const koTag = k => `${k.events.length > 1 ? k.events[0].replace(/\d$/, "") : k.events[0]} ${ROUND_SHORT(k.round)}`;
+  function koSide(k, n) {
+    const c = n === 1 ? k.c1 : k.c2, t = n === 1 ? k.t1 : k.t2, seed = n === 1 ? k.seed1 : k.seed2;
+    const tbd = !c || /^tbd$/i.test(c);
+    const seedTxt = seed && !/winner|awaiting/i.test(seed) ? (/^\d+$/.test(seed) ? `#${seed}` : seed) : "";
+    const won = k.winner === n, lost = k.winner && k.winner !== n;
+    const sets = k.sets.map(p => `<span class="${p[n - 1] > p[2 - n] ? "sw" : ""}">${p[n - 1]}</span>`).join("");
+    return `<span class="p ${won ? "won" : ""} ${lost ? "lost" : ""}"><span>${tbd ? `<span class="tbd">${esc(seed && /winner|awaiting/i.test(seed) ? seed : "To be decided")}</span>` : esc(c)}${seedTxt ? `<span class="seed">${esc(seedTxt)}</span>` : ""}</span><span class="ko-r">${sets ? `<span class="sets">${sets}</span>` : ""}${t ? chip(t) : ""}</span></span>`;
+  }
   function renderBracket(f) {
-    let ties, title;
+    const ties = KO.filter(k => k.events.includes(f));
+    if (ties.length) {
+      const fam = ties[0].events.length > 1 ? ties[0].format : evName(f);
+      const anyResult = ties.some(k => k.winner);
+      const pending = !(ties[0].events.every(groupDone));
+      $("brTitle").textContent = `${fam} knockout${pending && !anyResult ? " (projected)" : ""}`;
+      $("bracket").innerHTML = ties.map(k => `<div class="tie ${k.winner ? "done" : ""}"><span class="lab">${esc(k.round)}${k.winner ? ` · ${esc(k.w1 ?? "")}-${esc(k.w2 ?? "")}` : ""}</span>${koSide(k, 1)}${koSide(k, 2)}</div>`).join("");
+      return;
+    }
+    // Fallback when the scorecard has no Finals sheet: work the draw out from the standings.
+    let list, title;
     const fam = f.replace(/\d$/, ""), hasPair = /\d$/.test(f) && EVENTS.some(e => e.k === fam + "1") && EVENTS.some(e => e.k === fam + "2");
     if (!hasPair) {
       const tb = table(f); title = groupDone(f) ? "Semifinal draw" : "Semifinal draw (projected)";
-      ties = [["SF1", f, tb[0].t, 1, f, tb[3].t, 4], ["SF2", f, tb[1].t, 2, f, tb[2].t, 3]];
+      list = [["SF1", f, tb[0].t, 1, f, tb[3].t, 4], ["SF2", f, tb[1].t, 2, f, tb[2].t, 3]];
     } else {
       const f1 = fam + "1", f2 = fam + "2", t1 = table(f1), t2 = table(f2);
       title = `${evName(f1).replace(/\s*1$/, "")} quarterfinal draw${groupDone(f1) && groupDone(f2) ? "" : " (projected)"}`;
-      ties = [0, 1, 2, 3].map(i => ["QF" + (i + 1), f1, t1[i].t, i + 1, f2, t2[3 - i].t, 4 - i]);
+      list = [0, 1, 2, 3].map(i => ["QF" + (i + 1), f1, t1[i].t, i + 1, f2, t2[3 - i].t, 4 - i]);
     }
     $("brTitle").textContent = title;
-    $("bracket").innerHTML = ties.map(([l, fa, ta, sa, fb, tb, sb]) => {
+    $("bracket").innerHTML = list.map(([l, fa, ta, sa, fb, tb, sb]) => {
       const tag = (ff, s) => fa === fb ? `#${s}` : `${ff} #${s}`;
       return `<div class="tie"><span class="lab">${l}</span><span class="p"><span>${esc(nm(fa, ta))}<span class="seed">${tag(fa, sa)}</span></span>${chip(ta)}</span><span class="p"><span>${esc(nm(fb, tb))}<span class="seed">${tag(fb, sb)}</span></span>${chip(tb)}</span></div>`;
     }).join("");
@@ -131,7 +173,8 @@
   function renderTeams() {
     const wins = {}, played = {}, pf = {}; TEAMS.forEach(t => { wins[t] = 0; played[t] = 0; pf[t] = 0 });
     for (const m of MATCHES) { const r = R[m.id]; if (!r) continue; played[m.a]++; played[m.b]++; pf[m.a] += r[0]; pf[m.b] += r[1]; wins[r[0] > r[1] ? m.a : m.b]++ }
-    const order = [...TEAMS].sort((a, b) => wins[b] - wins[a] || pf[b] - pf[a] || a - b);
+    const ts = teamScores(), order = ts.map(r => r.t), tpts = {}, trank = {};
+    ts.forEach((r, i) => { tpts[r.t] = r.pts; trank[r.t] = i && r.pts === ts[i - 1].pts ? trank[ts[i - 1].t] : i + 1 });
     const ord = n => n + (["th", "st", "nd", "rd"][(n % 100 > 10 && n % 100 < 14) ? 0 : n % 10] || "th");
     const tables = {}; EVENTS.forEach(e => tables[e.k] = table(e.k));
     $("teamGrid").innerHTML = order.map((t, i) => {
@@ -140,7 +183,7 @@
         const pos = tables[e.k].findIndex(r => r.t === t) + 1, row = tables[e.k][pos - 1];
         return `<tr><td class="ev">${esc(e.k)}</td><td class="l">${esc(nm(e.k, t))}</td><td>${row.p ? ord(pos) : "–"}</td><td>${row.w}-${row.l}</td></tr>`;
       }).join("");
-      return `<div class="card tcard" style="--tc:var(--t${t})"><div class="thead"><span class="sw"></span><div><h3>${esc(teamName(t))}</h3><div class="cap">${cap ? `Captain: ${esc(cap)}` : `${played[t]} played · ${wins[t]} won`}</div></div><div class="rank">${ord(i + 1)}<small>${wins[t]} win${wins[t] === 1 ? "" : "s"}</small></div></div>
+      return `<div class="card tcard" style="--tc:var(--t${t})"><div class="thead"><span class="sw"></span><div><h3>${esc(teamName(t))}</h3><div class="cap">${cap ? `Captain: ${esc(cap)}` : `${played[t]} played · ${wins[t]} won`}</div></div><div class="rank">${ord(trank[t])}<small>${tpts[t]} pts</small></div></div>
         <div class="tablewrap"><table><thead><tr><th class="l">Event</th><th class="l">Player / Pair</th><th>Pos</th><th>W-L</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
     }).join("");
   }
@@ -227,10 +270,10 @@
   async function getJSON(path) { const r = await fetch(`${path}?t=${Date.now()}`, { cache: "no-store" }); if (!r.ok) throw new Error(path + " " + r.status); return r.json() }
   async function refresh(first) {
     try {
-      const [fx, res, cfg] = await Promise.all([getJSON("data/fixtures.json"), getJSON("data/results.json"), getJSON("data/config.json")]);
+      const [fx, res, cfg, ko] = await Promise.all([getJSON("data/fixtures.json"), getJSON("data/results.json"), getJSON("data/config.json"), getJSON("data/knockout.json").catch(() => ({ ties: [] }))]);
       const newIds = first ? [] : Object.keys(res.results || {}).filter(k => !R[k]);
       FX = fx; RES = res; CFG = cfg || {};
-      EVENTS = fx.events; ROSTER = fx.roster; MATCHES = fx.matches; R = res.results || {};
+      EVENTS = fx.events; ROSTER = fx.roster; MATCHES = fx.matches; R = res.results || {}; KO = (ko && ko.ties) || [];
       if (CFG.tournament) { $("title").textContent = CFG.tournament; document.title = CFG.tournament + " | SDU" }
       $("live").classList.remove("off");
       if (newIds.length) {

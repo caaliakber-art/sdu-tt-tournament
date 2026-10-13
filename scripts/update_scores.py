@@ -58,6 +58,71 @@ def event_of(v):
     return key, clean(v)
 
 
+KO_FAMILY = {
+    "women's singles": ["WS"], "women's doubles": ["WD"], "mixed doubles": ["XD"],
+    "men's singles": ["MS1", "MS2"], "men's doubles": ["MD1", "MD2"],
+}
+
+
+def num(v):
+    try:
+        return int(float(v))
+    except (TypeError, ValueError):
+        return None
+
+
+def read_knockout(wb, warnings):
+    """Read the coordinator's Finals sheet: draw, seeds, per-set or per-match scores, winner.
+    Returns {"ties": [...]}; empty when the sheet is missing so the site falls back to its own draw."""
+    if "Finals" not in wb.sheetnames:
+        return {"ties": []}
+    ws = wb["Finals"]
+    hdr_row, idx = None, {}
+    for r in ws.iter_rows(min_row=1, max_row=10):
+        names = [clean(c.value).lower() for c in r]
+        if "format" in names and "round" in names:
+            hdr_row = r[0].row
+            seen = {}
+            for c, n in zip(r, names):
+                seen[n] = seen.get(n, 0) + 1
+                idx[f"{n}#{seen[n]}"] = c.column - 1
+            break
+    if hdr_row is None:
+        warnings.append("Finals sheet found but its header row (Format, Round) was not; knockout draw not read.")
+        return {"ties": []}
+
+    def g(row, name, n=1):
+        i = idx.get(f"{name}#{n}")
+        return row[i] if i is not None and i < len(row) else None
+
+    ties = []
+    for row in ws.iter_rows(min_row=hdr_row + 1, values_only=True):
+        fmt, rnd = clean(g(row, "format")), clean(g(row, "round"))
+        if not fmt or not rnd:
+            continue
+        fam = KO_FAMILY.get(fmt.lower().replace("’", "'"))
+        if not fam:
+            continue
+        sets = []
+        for n in (1, 2, 3):
+            a, b = num(g(row, f"match/set {n}", 1)), num(g(row, f"match/set {n}", 2))
+            if a is not None and b is not None:
+                sets.append([a, b])
+        c1, c2 = clean(g(row, "competitor 1")), clean(g(row, "competitor 2"))
+        winner = clean(g(row, "winner"))
+        tie = {
+            "format": fmt, "events": fam, "round": rnd,
+            "seed1": clean(g(row, "seed 1")), "c1": c1, "t1": team_no(g(row, "team 1")),
+            "seed2": clean(g(row, "seed 2")), "c2": c2, "t2": team_no(g(row, "team 2")),
+            "sets": sets, "w1": num(g(row, "wins", 1)), "w2": num(g(row, "wins", 2)),
+            "winner": 1 if winner and winner == c1 else 2 if winner and winner == c2 else None,
+        }
+        if winner.lower().startswith("tie"):
+            warnings.append(f"Finals: {fmt} {rnd} is marked '{winner}'.")
+        ties.append(tie)
+    return {"ties": ties}
+
+
 def main():
     src = Path(sys.argv[1] if len(sys.argv) > 1 else "scores/Score_Card.xlsx")
     out = Path(sys.argv[2] if len(sys.argv) > 2 else "data")
@@ -133,6 +198,8 @@ def main():
             warnings.append(f"Match {mid}: Winning Team column says Team {wt} but score {score} says Team {a if sa > sb else b}. Score used.")
         results[str(mid)] = [sa, sb]
 
+    knockout = read_knockout(wb, warnings)
+
     order = [k for k in EVENT_ORDER if k in events] + sorted(k for k in events if k not in EVENT_ORDER)
     fixtures = {
         "events": [{"k": k, "n": events[k]} for k in order],
@@ -147,6 +214,7 @@ def main():
         "results": results,
         "warnings": warnings,
     }
+    (out / "knockout.json").write_text(json.dumps(knockout, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     (out / "fixtures.json").write_text(json.dumps(fixtures, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     (out / "results.json").write_text(json.dumps(res, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"{len(matches)} matches, {len(results)} played, {len(warnings)} warning(s).")

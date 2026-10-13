@@ -4,7 +4,7 @@ Website for the Singhvi Dev & Unni LLP office table tennis tournament. It has fo
 
 | Tab | What it shows | Where the data comes from |
 |---|---|---|
-| **Home** | Team standings, recent results, next matches, group standings per event, projected knockout draw | `scores/Score_Card.xlsx` |
+| **Home** | Team standings, recent results, next matches, group standings per event, knockout draw and results | `scores/Score_Card.xlsx` (Shuffled Matches and Finals sheets) |
 | **Teams** | Each team's players by event, with group position and win-loss | `scores/Score_Card.xlsx` and `data/config.json` |
 | **Availability** | Each player's remaining matches and results, and how to reach the coordinator on Teams | `scores/Score_Card.xlsx` and `data/config.json` |
 
@@ -28,6 +28,13 @@ Rules for the Excel file:
 - Keep the sheet named **Shuffled Matches** and keep the rows in the same order. Row order is the match number.
 - Enter scores as `21-15` (Team 1 score first). Leave the score blank for matches not yet played.
 - If something looks wrong (a typo, a winner that does not match the score), the Actions log lists it as a warning. The score column is always treated as the truth.
+
+## Ranking rules (same as the scorecard)
+
+- Group standings: 2 points per win; ties split on point difference, then team number. Top 4 go through.
+- Q (qualified) and E (eliminated) are shown only once no remaining result can change them.
+- Knockout draw and knockout scores are read straight from the scorecard's **Finals** sheet, so the site always shows the coordinator's draw.
+- Team standings follow the **Best Team Ranking** sheet: 1 point per league win, 1 per quarterfinal or semifinal win, 5 for an event title, 3 for runner-up.
 
 ## 2. One-time setup
 

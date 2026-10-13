@@ -120,6 +120,14 @@ td.big{font-weight:700}
 .tie .p{display:flex;justify-content:space-between;gap:8px;align-items:center}
 .tie .p span:first-child{min-width:0}
 .tie .seed{color:var(--muted);font-size:12px;margin-left:4px}
+.tie .ko-r{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.tie .sets{display:inline-flex;gap:4px}
+.tie .sets span{min-width:22px;text-align:center;font-size:13px;color:var(--muted);background:var(--zebra);border-radius:4px;padding:1px 4px}
+.tie .sets span.sw{color:var(--fg);font-weight:700}
+.tie .p.won>span:first-child{font-weight:700}
+.tie .p.lost>span:first-child{color:var(--muted)}
+.tie .tbd{color:var(--muted);font-style:italic}
+.tie.done{border-color:var(--sky)}
 
 /* Teams */
 .teamgrid{display:grid;gap:22px;grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}

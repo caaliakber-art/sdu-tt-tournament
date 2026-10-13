@@ -1,0 +1,422 @@
+{
+ "ties": [
+  {
+   "format": "Women's Singles",
+   "events": [
+    "WS"
+   ],
+   "round": "Semifinal 1",
+   "seed1": "1",
+   "c1": "Neha P Jain",
+   "t1": 6,
+   "seed2": "4",
+   "c2": "Mamta",
+   "t2": 3,
+   "sets": [],
+   "w1": null,
+   "w2": null,
+   "winner": null
+  },
+  {
+   "format": "Women's Singles",
+   "events": [
+    "WS"
+   ],
+   "round": "Semifinal 2",
+   "seed1": "2",
+   "c1": "Vaishnavi M",
+   "t1": 2,
+   "seed2": "3",
+   "c2": "Subashree",
+   "t2": 4,
+   "sets": [],
+   "w1": null,
+   "w2": null,
+   "winner": null
+  },
+  {
+   "format": "Women's Singles",
+   "events": [
+    "WS"
+   ],
+   "round": "Final",
+   "seed1": "SF1 Winner",
+   "c1": "TBD",
+   "t1": null,
+   "seed2": "SF2 Winner",
+   "c2": "TBD",
+   "t2": null,
+   "sets": [],
+   "w1": null,
+   "w2": null,
+   "winner": null
+  },
+  {
+   "format": "Women's Doubles",
+   "events": [
+    "WD"
+   ],
+   "round": "Semifinal 1",
+   "seed1": "1",
+   "c1": "Amrutha + Neha",
+   "t1": 1,
+   "seed2": "4",
+   "c2": "Subashree + Sanjana",
+   "t2": 4,
+   "sets": [],
+   "w1": null,
+   "w2": null,
+   "winner": null
+  },
+  {
+   "format": "Women's Doubles",
+   "events": [
+    "WD"
+   ],
+   "round": "Semifinal 2",
+   "seed1": "2",
+   "c1": "Neha P Jain + Drishti",
+   "t1": 6,
+   "seed2": "3",
+   "c2": "Vaishnavi M + Keerthana",
+   "t2": 2,
+   "sets": [],
+   "w1": null,
+   "w2": null,
+   "winner": null
+  },
+  {
+   "format": "Women's Doubles",
+   "events": [
+    "WD"
+   ],
+   "round": "Final",
+   "seed1": "SF1 Winner",
+   "c1": "TBD",
+   "t1": null,
+   "seed2": "SF2 Winner",
+   "c2": "TBD",
+   "t2": null,
+   "sets": [],
+   "w1": null,
+   "w2": null,
+   "winner": null
+  },
+  {
+   "format": "Mixed Doubles",
+   "events": [
+    "XD"
+   ],
+   "round": "Semifinal 1",
+   "seed1": "1",
+   "c1": "Rithu + Darshan Patel",
+   "t1": 3,
+   "seed2": "4",
+   "c2": "Sanjana + Bharatha S",
+   "t2": 4,
+   "sets": [
+    [
+     15,
+     17
+    ],
+    [
+     16,
+     14
+    ],
+    [
+     15,
+     9
+    ]
+   ],
+   "w1": 2,
+   "w2": 1,
+   "winner": 1
+  },
+  {
+   "format": "Mixed Doubles",
+   "events": [
+    "XD"
+   ],
+   "round": "Semifinal 2",
+   "seed1": "2",
+   "c1": "Keerthana + Abhiram",
+   "t1": 2,
+   "seed2": "3",
+   "c2": "Neha + Dhruv Jaju",
+   "t2": 1,
+   "sets": [],
+   "w1": null,
+   "w2": null,
+   "winner": null
+  },
+  {
+   "format": "Mixed Doubles",
+   "events": [
+    "XD"
+   ],
+   "round": "Final",
+   "seed1": "SF1 Winner",
+   "c1": "Rithu + Darshan Patel",
+   "t1": 3,
+   "seed2": "SF2 Winner",
+   "c2": "TBD",
+   "t2": null,
+   "sets": [],
+   "w1": null,
+   "w2": null,
+   "winner": null
+  },
+  {
+   "format": "Men's Singles",
+   "events": [
+    "MS1",
+    "MS2"
+   ],
+   "round": "Quarterfinal 1",
+   "seed1": "MS1 #1",
+   "c1": "Pavan D",
+   "t1": 5,
+   "seed2": "MS2 #4",
+   "c2": "Navtej",
+   "t2": 6,
+   "sets": [],
+   "w1": null,
+   "w2": null,
+   "winner": null
+  },
+  {
+   "format": "Men's Singles",
+   "events": [
+    "MS1",
+    "MS2"
+   ],
+   "round": "Quarterfinal 2",
+   "seed1": "MS1 #2",
+   "c1": "Sujal",
+   "t1": 3,
+   "seed2": "MS2 #3",
+   "c2": "Aman Doshi",
+   "t2": 1,
+   "sets": [],
+   "w1": null,
+   "w2": null,
+   "winner": null
+  },
+  {
+   "format": "Men's Singles",
+   "events": [
+    "MS1",
+    "MS2"
+   ],
+   "round": "Quarterfinal 3",
+   "seed1": "MS1 #3",
+   "c1": "Saurabh",
+   "t1": 1,
+   "seed2": "MS2 #2",
+   "c2": "Vidwan",
+   "t2": 5,
+   "sets": [],
+   "w1": null,
+   "w2": null,
+   "winner": null
+  },
+  {
+   "format": "Men's Singles",
+   "events": [
+    "MS1",
+    "MS2"
+   ],
+   "round": "Quarterfinal 4",
+   "seed1": "MS1 #4",
+   "c1": "Anshul",
+   "t1": 6,
+   "seed2": "MS2 #1",
+   "c2": "Jay B",
+   "t2": 4,
+   "sets": [],
+   "w1": null,
+   "w2": null,
+   "winner": null
+  },
+  {
+   "format": "Men's Singles",
+   "events": [
+    "MS1",
+    "MS2"
+   ],
+   "round": "Semifinal 1",
+   "seed1": "Awaiting QFs",
+   "c1": "TBD",
+   "t1": null,
+   "seed2": "Awaiting QFs",
+   "c2": "TBD",
+   "t2": null,
+   "sets": [],
+   "w1": null,
+   "w2": null,
+   "winner": null
+  },
+  {
+   "format": "Men's Singles",
+   "events": [
+    "MS1",
+    "MS2"
+   ],
+   "round": "Semifinal 2",
+   "seed1": "Awaiting QFs",
+   "c1": "TBD",
+   "t1": null,
+   "seed2": "Awaiting QFs",
+   "c2": "TBD",
+   "t2": null,
+   "sets": [],
+   "w1": null,
+   "w2": null,
+   "winner": null
+  },
+  {
+   "format": "Men's Singles",
+   "events": [
+    "MS1",
+    "MS2"
+   ],
+   "round": "Final",
+   "seed1": "SF1 Winner",
+   "c1": "TBD",
+   "t1": null,
+   "seed2": "SF2 Winner",
+   "c2": "TBD",
+   "t2": null,
+   "sets": [],
+   "w1": null,
+   "w2": null,
+   "winner": null
+  },
+  {
+   "format": "Men's Doubles",
+   "events": [
+    "MD1",
+    "MD2"
+   ],
+   "round": "Quarterfinal 1",
+   "seed1": "MD1 #1",
+   "c1": "Kushal + Shubham",
+   "t1": 2,
+   "seed2": "MD2 #4",
+   "c2": "Khush B + Hemanth",
+   "t2": 4,
+   "sets": [],
+   "w1": null,
+   "w2": null,
+   "winner": null
+  },
+  {
+   "format": "Men's Doubles",
+   "events": [
+    "MD1",
+    "MD2"
+   ],
+   "round": "Quarterfinal 2",
+   "seed1": "MD1 #2",
+   "c1": "Kunal D + Anirudha H",
+   "t1": 3,
+   "seed2": "MD2 #3",
+   "c2": "Yuvraj + Karthik KB",
+   "t2": 2,
+   "sets": [],
+   "w1": null,
+   "w2": null,
+   "winner": null
+  },
+  {
+   "format": "Men's Doubles",
+   "events": [
+    "MD1",
+    "MD2"
+   ],
+   "round": "Quarterfinal 3",
+   "seed1": "MD1 #3",
+   "c1": "Leela Sagar + Ali Akbar",
+   "t1": 4,
+   "seed2": "MD2 #2",
+   "c2": "Sarvesh H + Deviprasad",
+   "t2": 3,
+   "sets": [],
+   "w1": null,
+   "w2": null,
+   "winner": null
+  },
+  {
+   "format": "Men's Doubles",
+   "events": [
+    "MD1",
+    "MD2"
+   ],
+   "round": "Quarterfinal 4",
+   "seed1": "MD1 #4",
+   "c1": "Nagarajan + Chandrashaker Joshi",
+   "t1": 6,
+   "seed2": "MD2 #1",
+   "c2": "Rohan + Bhuvanesh",
+   "t2": 6,
+   "sets": [],
+   "w1": null,
+   "w2": null,
+   "winner": null
+  },
+  {
+   "format": "Men's Doubles",
+   "events": [
+    "MD1",
+    "MD2"
+   ],
+   "round": "Semifinal 1",
+   "seed1": "Awaiting QFs",
+   "c1": "TBD",
+   "t1": null,
+   "seed2": "Awaiting QFs",
+   "c2": "TBD",
+   "t2": null,
+   "sets": [],
+   "w1": null,
+   "w2": null,
+   "winner": null
+  },
+  {
+   "format": "Men's Doubles",
+   "events": [
+    "MD1",
+    "MD2"
+   ],
+   "round": "Semifinal 2",
+   "seed1": "Awaiting QFs",
+   "c1": "TBD",
+   "t1": null,
+   "seed2": "Awaiting QFs",
+   "c2": "TBD",
+   "t2": null,
+   "sets": [],
+   "w1": null,
+   "w2": null,
+   "winner": null
+  },
+  {
+   "format": "Men's Doubles",
+   "events": [
+    "MD1",
+    "MD2"
+   ],
+   "round": "Final",
+   "seed1": "SF1 Winner",
+   "c1": "TBD",
+   "t1": null,
+   "seed2": "SF2 Winner",
+   "c2": "TBD",
+   "t2": null,
+   "sets": [],
+   "w1": null,
+   "w2": null,
+   "winner": null
+  }
+ ]
+}
