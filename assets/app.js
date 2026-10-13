@@ -17,7 +17,10 @@
   const teamName = t => (CFG.team_names && CFG.team_names[t]) || `Team ${t}`;
   const chip = t => `<span class="tchip" style="--tc:var(--t${t})"><i></i>${esc(teamName(t))}</span>`;
   const captain = t => (CFG.captains && CFG.captains[t]) || "";
-  const capLine = t => captain(t) ? `<div class="capt">Capt. ${esc(captain(t))}</div>` : "";
+  // One treatment wherever a TEAM is the subject: swatch, team name prominent, captain beneath.
+  const capTxt = t => captain(t) ? `Captain ${esc(captain(t))}` : `<span class="tbc">Captain to be confirmed</span>`;
+  const teamBlock = (t, size = "") => `<span class="team ${size}" style="--tc:var(--t${t})"><i class="tsw"></i><span class="tw"><span class="tname">${esc(teamName(t))}</span><span class="tcap">${capTxt(t)}</span></span></span>`;
+  const teamInline = t => `<b>${esc(teamName(t))}</b> · ${captain(t) ? `Captain ${esc(captain(t))}` : "Captain to be confirmed"}`;
   const nm = (f, t) => (ROSTER[f] && ROSTER[f][t]) || `Team ${t}`;
   const evName = k => (EVENTS.find(e => e.k === k) || { n: k }).n;
   const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -109,13 +112,15 @@
     const order = teamScores();
     let rank = 0, prev = null;
     $("teamTbl").tBodies[0].innerHTML = order.map((r, i) => { if (r.pts !== prev) { rank = i + 1; prev = r.pts }
-      return `<tr><td class="rk">${rank}</td><td class="l">${chip(r.t)}${capLine(r.t)}</td><td>${r.lw}</td><td>${r.ko}</td><td>${r.bonus}</td><td class="big">${r.pts}</td></tr>` }).join("");
+      return `<tr><td class="rk">${rank}</td><td class="l">${teamBlock(r.t)}</td><td>${r.lw}</td><td>${r.ko}</td><td>${r.bonus}</td><td class="big">${r.pts}</td></tr>` }).join("");
     if (feedMode === "res") {
       $("rTitle").textContent = "Recent results";
       const kos = KO.filter(k => k.winner).slice().reverse();
-      const list = MATCHES.filter(m => R[m.id]).sort((a, b) => b.id - a.id).slice(0, Math.max(0, 6 - kos.length));
+      const seen = RES.first_seen || {};
+      const list = MATCHES.filter(m => R[m.id]).sort((a, b) => String(seen[b.id] || "").localeCompare(String(seen[a.id] || "")) || b.id - a.id).slice(0, Math.max(0, 6 - kos.length));
       const koItems = kos.slice(0, 6).map(k => `<li><span class="meta"><span class="tag">${esc(koTag(k))}</span>${esc(k.format)} · ${esc(k.round)}</span><span class="${k.winner === 1 ? "won" : ""}">${esc(k.c1)}</span><span class="sc">${k.w1 ?? ""}-${k.w2 ?? ""}</span><span class="r ${k.winner === 2 ? "won" : ""}">${esc(k.c2)}</span></li>`);
-      const items = koItems.concat(list.map(m => `<li class="${isFresh(m.id) ? "fresh" : ""}"><span class="meta"><span class="tag">${esc(m.f)}</span>${slotTxt(m)}</span>${pairLine(m, R[m.id])}</li>`));
+      const added = id => { const d = new Date(seen[id]); return isNaN(d) ? "" : ` · in ${d.getDate()} ${MON[d.getMonth()]}` };
+      const items = koItems.concat(list.map(m => `<li class="${isFresh(m.id) ? "fresh" : ""}"><span class="meta"><span class="tag">${esc(m.f)}</span>${slotTxt(m)}${added(m.id)}</span>${pairLine(m, R[m.id])}</li>`));
       $("feed").innerHTML = items.length ? items.join("") : '<li class="empty">No results yet.</li>';
     } else {
       $("rTitle").textContent = "Next up";
@@ -182,12 +187,12 @@
     const ord = n => n + (["th", "st", "nd", "rd"][(n % 100 > 10 && n % 100 < 14) ? 0 : n % 10] || "th");
     const tables = {}; EVENTS.forEach(e => tables[e.k] = table(e.k));
     $("teamGrid").innerHTML = order.map((t, i) => {
-      const cap = CFG.captains && CFG.captains[t];
       const rows = EVENTS.map(e => {
         const pos = tables[e.k].findIndex(r => r.t === t) + 1, row = tables[e.k][pos - 1];
         return `<tr><td class="ev">${esc(e.k)}</td><td class="l">${esc(nm(e.k, t))}</td><td>${row.p ? ord(pos) : "–"}</td><td>${row.w}-${row.l}</td></tr>`;
       }).join("");
-      return `<div class="card tcard" style="--tc:var(--t${t})"><div class="thead"><span class="sw"></span><div><h3>${esc(teamName(t))}</h3><div class="cap">${cap ? `Captain: <b>${esc(cap)}</b> · ` : ""}${played[t]} played · ${wins[t]} won</div></div><div class="rank">${ord(trank[t])}<small>${tpts[t]} pts</small></div></div>
+      return `<div class="card tcard" style="--tc:var(--t${t})"><div class="thead">${teamBlock(t, "lg")}<div class="rank">${ord(trank[t])}<small>${tpts[t]} pts</small></div></div>
+        <div class="tstats">${played[t]} played · ${wins[t]} won · ${tpts[t]} pts</div>
         <div class="tablewrap"><table><thead><tr><th class="l">Event</th><th class="l">Player / Pair</th><th>Pos</th><th>W-L</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
     }).join("");
   }
@@ -234,7 +239,7 @@
       const ms = MATCHES.filter(m => m.f === f && (m.a === t || m.b === t));
       const left = ms.filter(m => !R[m.id]), done = ms.filter(m => R[m.id]);
       const pos = table(f).findIndex(r => r.t === t) + 1;
-      const head = `<h4>${esc(evName(f))}<span class="sub">${esc(entry)} · ${esc(teamName(t))}${done.length ? ` · ${pos}${["th", "st", "nd", "rd"][pos] || "th"} in group` : ""}</span></h4>`;
+      const head = `<h4>${esc(evName(f))}<span class="sub">${esc(entry)} · ${teamInline(t)}${done.length ? ` · ${pos}${["th", "st", "nd", "rd"][pos] || "th"} in group` : ""}</span></h4>`;
       const li = m => `<li><span class="meta">${slotTxt(m)}</span>${pairLine(m, R[m.id])}</li>`;
       return `<div>${head}<ul class="list">${left.map(li).join("")}${done.map(li).join("")}</ul>${left.length ? "" : '<p class="empty">All group matches played.</p>'}</div>`;
     }).join("") + "</div>";
@@ -327,7 +332,7 @@
     const m = celQueue.shift(); if (!m) { celBusy = false; $("celebrate").hidden = true; return }
     celBusy = true;
     $("celTag").textContent = m.big ? `Champions · ${m.tag}` : m.tag;
-    $("celName").textContent = m.name; $("celScore").textContent = m.score; $("celTeam").innerHTML = chip(m.team);
+    $("celName").textContent = m.name; $("celScore").textContent = m.score; $("celTeam").innerHTML = teamBlock(m.team, "cel");
     const el = $("celebrate"); el.classList.toggle("big", m.big); el.hidden = false; el.classList.remove("show"); void el.offsetWidth; el.classList.add("show");
     confetti(m.big);
     setTimeout(nextCel, m.big ? 7000 : 5000);

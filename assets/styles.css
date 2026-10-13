@@ -134,7 +134,7 @@ td.big{font-weight:700}
 /* Teams */
 .teamgrid{display:grid;gap:22px;grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}
 @media (max-width:420px){.teamgrid{grid-template-columns:minmax(0,1fr)}}
-.tcard .thead{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:16px 18px 12px;border-bottom:1px solid var(--rule)}
+.tcard .thead{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:16px 18px 12px;border-bottom:1px solid var(--rule)}
 .tcard .sw{width:14px;height:40px;border-radius:4px;background:var(--tc);box-shadow:inset 0 0 0 1px rgba(15,30,44,.18)}
 .tcard h3{margin:0;font:800 22px/1 var(--f-display);text-transform:uppercase;letter-spacing:.02em}
 .tcard .cap{margin-top:4px;font-size:13px;color:var(--muted)}
@@ -169,6 +169,29 @@ select{width:100%;max-width:420px;font:inherit;padding:10px 12px;border-radius:8
 
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 18px;border-radius:10px;border-left:4px solid var(--neon);box-shadow:0 8px 30px rgba(0,0,0,.25);font-weight:500;max-width:calc(100% - 32px);z-index:5}
 
+/* Team block: used wherever a team is the subject (standings, team cards, TV banner) */
+.team{display:inline-flex;align-items:center;gap:10px;min-width:0;text-align:left}
+.team .tsw{flex-shrink:0;width:6px;height:34px;border-radius:3px;background:var(--tc);box-shadow:inset 0 0 0 1px rgba(15,30,44,.18)}
+.team .tw{display:grid;min-width:0}
+.team .tname{font:800 18px/1.1 var(--f-display);letter-spacing:.02em;text-transform:uppercase;color:var(--fg)}
+.team .tcap{font-size:13px;color:var(--muted);margin-top:2px}
+.team .tbc{font-style:italic;opacity:.75}
+.team.lg .tsw{width:8px;height:46px}
+.team.lg .tname{font-size:24px}
+.team.lg .tcap{font-size:14px}
+.team.cel .tsw{height:40px}
+.team.cel .tname{color:#fff;font-size:26px}
+.team.cel .tcap{color:var(--sky);font-size:16px}
+.tstats{padding:8px 18px 2px;font-size:13px;color:var(--muted)}
+.tv .team .tname{font-size:24px}
+.tv .team .tcap{font-size:16px}
+.tv .team .tsw{height:42px}
+.tv .team.lg .tname{font-size:24px}
+.tv .tstats{font-size:15px;padding:6px 16px 0}
+.tv .list li{font-size:20px;padding:11px 0}
+.tv .list .meta{font-size:15px}
+.tv .list .tag{font-size:13px}
+
 /* Moments: fresh results, knockout winners, champion, TV result banner */
 .hbtns{display:flex;gap:8px;align-items:center}
 .ghostbtn{border-color:rgba(255,255,255,.2);color:var(--sky);font-size:13px;padding:6px 12px}
@@ -196,7 +219,6 @@ main.enter{animation:slidein .5s ease-out}
 @keyframes pop{from{transform:scale(.8);opacity:0}to{transform:none;opacity:1}}
 
 /* TV slideshow: each slide fits one 16:9 screen; a navy bar at the bottom shows the slide and a progress strip */
-.capt{font-size:12px;color:var(--muted);margin-top:2px}
 .tvbar{display:none}
 .tv body{font-size:20px;cursor:none;padding-bottom:64px}
 .tv .notv,.tv .sdufoot,.tv .ghostbtn{display:none!important}

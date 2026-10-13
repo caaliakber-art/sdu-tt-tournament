@@ -146,6 +146,15 @@ def main():
     fixes = load_name_fixes(out)
 
     wb = openpyxl.load_workbook(src, data_only=True)
+    # When was this scorecard saved? Used to date results the first time they appear.
+    saved = wb.properties.modified or datetime.now(timezone.utc).replace(tzinfo=None)
+    saved_iso = saved.strftime("%Y-%m-%dT%H:%M:%SZ")
+    # Previous results.json (the version already published) tells us which results are new.
+    try:
+        prev = json.loads((out / "results.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        prev = {}
+    prev_seen = prev.get("first_seen", {}) if isinstance(prev, dict) else {}
     if SHEET not in wb.sheetnames:
         sys.exit(f'Sheet "{SHEET}" not found in {src}. Sheets: {wb.sheetnames}')
     ws = wb[SHEET]
@@ -174,8 +183,9 @@ def main():
     c_fmt = col("format")
     c_p1, c_p2 = col("participant 1"), col("participant 2")
     c_win, c_score, c_wteam = col("winner"), col("score"), col("winning team")
+    c_date = col("date played", "played on", "match date", "date")   # optional column; used for "Recent results" order
 
-    events, roster, matches, results, warnings = {}, {}, [], {}, []
+    events, roster, matches, results, warnings, played_on = {}, {}, [], {}, [], {}
     mid = 0
     for row in ws.iter_rows(min_row=header_row + 1, values_only=True):
         if not clean(row[c_day]).lower().startswith("day"):
@@ -214,6 +224,8 @@ def main():
         if wt and wt != (a if sa > sb else b):
             warnings.append(f"Match {mid}: Winning Team column says Team {wt} but score {score} says Team {a if sa > sb else b}. Score used.")
         results[str(mid)] = [sa, sb]
+        if c_date is not None and isinstance(row[c_date], datetime):
+            played_on[str(mid)] = row[c_date].strftime("%Y-%m-%dT%H:%M:%SZ")
 
     knockout = read_knockout(wb, warnings, fixes)
 
@@ -223,8 +235,13 @@ def main():
         "roster": {k: dict(sorted(roster[k].items(), key=lambda kv: int(kv[0]))) for k in order},
         "matches": matches,
     }
+    # A result keeps the date it first appeared, even if its score is later corrected,
+    # so "Recent results" reflects when matches came in rather than their place in the schedule.
+    first_seen = {k: played_on.get(k) or prev_seen.get(k, saved_iso) for k in results}
     res = {
         "updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "scorecard_saved": saved_iso,
+        "first_seen": first_seen,
         "source": src.name,
         "played": len(results),
         "total": len(matches),
