@@ -68,10 +68,19 @@
    "seed2": "SF2 Winner",
    "c2": "Subashree",
    "t2": 4,
-   "sets": [],
-   "w1": null,
-   "w2": null,
-   "winner": null
+   "sets": [
+    [
+     21,
+     17
+    ],
+    [
+     21,
+     18
+    ]
+   ],
+   "w1": 2,
+   "w2": 0,
+   "winner": 1
   },
   {
    "format": "Women's Doubles",
@@ -83,8 +92,8 @@
    "c1": "Amrutha + Neha",
    "t1": 1,
    "seed2": "4",
-   "c2": "Vaishnavi M + Keerthana",
-   "t2": 2,
+   "c2": "Neha P Jain + Drishti",
+   "t2": 6,
    "sets": [],
    "w1": null,
    "w2": null,
@@ -100,12 +109,25 @@
    "c1": "Subashree + Sanjana",
    "t1": 4,
    "seed2": "3",
-   "c2": "Neha P Jain + Drishti",
-   "t2": 6,
-   "sets": [],
-   "w1": null,
-   "w2": null,
-   "winner": null
+   "c2": "Vaishnavi M + Keerthana",
+   "t2": 2,
+   "sets": [
+    [
+     16,
+     12
+    ],
+    [
+     7,
+     16
+    ],
+    [
+     9,
+     16
+    ]
+   ],
+   "w1": 1,
+   "w2": 2,
+   "winner": 2
   },
   {
    "format": "Women's Doubles",
@@ -117,8 +139,8 @@
    "c1": "TBD",
    "t1": null,
    "seed2": "SF2 Winner",
-   "c2": "TBD",
-   "t2": null,
+   "c2": "Vaishnavi M + Keerthana",
+   "t2": 2,
    "sets": [],
    "w1": null,
    "w2": null,
@@ -263,10 +285,19 @@
    "seed2": "MS2 #2",
    "c2": "Vidwan",
    "t2": 5,
-   "sets": [],
-   "w1": null,
-   "w2": null,
-   "winner": null
+   "sets": [
+    [
+     9,
+     16
+    ],
+    [
+     14,
+     16
+    ]
+   ],
+   "w1": 0,
+   "w2": 2,
+   "winner": 2
   },
   {
    "format": "Men's Singles",
@@ -297,8 +328,8 @@
    "c1": "TBD",
    "t1": null,
    "seed2": "QF3 Winner",
-   "c2": "TBD",
-   "t2": null,
+   "c2": "Vidwan",
+   "t2": 5,
    "sets": [],
    "w1": null,
    "w2": null,
