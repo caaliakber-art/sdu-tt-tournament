@@ -41,5 +41,21 @@
     }).then(r => r.ok).catch(() => false);
   }
 
-  window.TTCheer = { watch, add };
+  // Cheer Rush windows (data/config.json "cheer_rush": [{ "start": "13:15", "end": "13:20", "date": optional "YYYY-MM-DD" }]),
+  // in the device's local time. Returns { active, endsIn } during a rush, { active: false, startsIn } in the 10 minutes before one, else null.
+  const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  function rush(list, now) {
+    now = now || new Date(); let soon = null;
+    for (const r of Array.isArray(list) ? list : []) {
+      if (!r || !r.start || !r.end || (r.date && r.date !== ymd(now))) continue;
+      const at = hm => { const [h, m] = String(hm).split(":").map(Number); const d = new Date(now); d.setHours(h, m || 0, 0, 0); return d };
+      const s = at(r.start), e = at(r.end);
+      if (now >= s && now < e) return { active: true, endsIn: e - now };
+      if (now < s && s - now <= 10 * 60000 && (!soon || s - now < soon.startsIn)) soon = { active: false, startsIn: s - now };
+    }
+    return soon;
+  }
+  const clock = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` };
+
+  window.TTCheer = { watch, add, rush, clock };
 })();

@@ -61,6 +61,17 @@ It loops by itself: the Race for Best Team, team standings and recent results, t
 
 Cheers are kept in a free Firebase Realtime Database. Its address goes in `cheer_db` in `data/config.json`; leave it empty to switch cheering off. The database rules only allow six numbers (one per team) that can each go up by at most 25 per write, and nothing about who cheered is stored. The race slide stays on screen longer while cheering is on (`tv_race_seconds`, default 20). The offline copy does not show cheers.
 
+The cheer game:
+
+- **Combos.** Fast, steady tapping builds a combo: x2 after 8 quick taps, x3 after 20, ON FIRE x5 after 40. A one-second pause resets it.
+- **Fan levels.** Each person climbs Rookie (50 cheers), Ultra (250), Superfan (1,000) and Legend (5,000), with a level-up moment. Levels are kept on the person's own phone or browser.
+- **Milestones and overtakes.** The TV announces when a team's fans reach 100, 250, 500, 1,000 cheers and every 1,000 after, and when one team's fans overtake another's.
+- **Cheer Rush.** At the times in `cheer_rush` in `data/config.json`, every cheer counts double. Phones and the TV count down from 10 minutes before; during the rush the TV jumps to the race and holds it until the rush ends. Times are in the device's local time, every day, and an entry can carry a `date` to run once:
+
+```json
+"cheer_rush": [ { "start": "13:15", "end": "13:20" }, { "start": "18:15", "end": "18:20" } ]
+```
+
 ### Offline copy (no internet at the TV)
 
 Every publish also produces `tt-offline.html` (download it from `https://caaliakber-art.github.io/sdu-tt-tournament/tt-offline.html`, or run `python scripts/build_offline.py`). It is the whole site in one file: copy it to the TV laptop or a pen drive, double-click it, and click **TV mode**. It needs no internet, but its scores are frozen at the time it was made, so download a fresh copy after each scorecard update. The status chip reads "Offline copy" so nobody mistakes it for the live page.

@@ -123,7 +123,7 @@
     const top = Math.max(1, ...order.map(r => r.pts)), pos = v => (v / top * 0.9).toFixed(4);
     if (box.dataset.n !== String(TEAMS.length)) {
       box.dataset.n = TEAMS.length;
-      box.innerHTML = TEAMS.map(t => `<div class="lane" data-t="${t}" style="--tc:var(--t${t})"><div class="lane-id">${teamBlock(t, "", true)}<span class="lpts"></span><span class="lfans"><i><b></b></i><em></em></span></div><div class="track"><div class="runner" style="--p:0"><span class="rtag"></span>${art(t, "run") ? `<img src="${esc(art(t, "run"))}" alt="${esc(captain(t) || teamName(t))}">` : `<i class="rdot">${t}</i>`}</div></div></div>`).join("")
+      box.innerHTML = TEAMS.map(t => `<div class="lane" data-t="${t}" style="--tc:var(--t${t});--tcf:${t === 1 ? "#fff" : "#0F1E2C"}"><div class="lane-id">${teamBlock(t, "", true)}<span class="lpts"></span><span class="lfans"><i><b></b></i><em></em></span></div><div class="track"><div class="runner" style="--p:0"><span class="rtag"></span>${art(t, "run") ? `<img src="${esc(art(t, "run"))}" alt="${esc(captain(t) || teamName(t))}">` : `<i class="rdot">${t}</i>`}</div></div></div>`).join("")
         + `<div class="lane scale" aria-hidden="true"><div class="lane-id"></div><div class="track" id="raceScale"></div></div>`;
     }
     const step = top > 40 ? 20 : top > 15 ? 10 : 5;
@@ -152,7 +152,7 @@
     if (cheerOn || !db || window.TT_OFFLINE) return;
     cheerOn = true; $("race").classList.add("cheers-on"); $("cheerLink").hidden = false;
     if (isTv()) requestAnimationFrame(fitSlide);
-    loadScript("assets/cheerdb.js").then(() => window.TTCheer.watch(db, onCheers)).catch(() => {});
+    loadScript("assets/cheerdb.js").then(() => { window.TTCheer.watch(db, onCheers); tickRush(); setInterval(tickRush, 1000) }).catch(() => {});
     loadScript("assets/qrcode.js").then(() => {
       try { const q = window.qrcode(0, "M"); q.addData(cheerUrl()); q.make(); $("qrSvg").innerHTML = q.createSvgTag(4, 2); $("cheerQr").hidden = false; if (isTv()) requestAnimationFrame(fitSlide) } catch (_) {}
     }).catch(() => {});
@@ -160,7 +160,56 @@
   function onCheers(d) {
     const prev = CHEERS; CHEERS = d || {};
     renderFans();
-    if (prev) TEAMS.forEach(t => { const diff = (Number(CHEERS[t]) || 0) - (Number(prev[t]) || 0); if (diff > 0) cheerBurst(t, diff) });
+    if (!prev) return;
+    TEAMS.forEach(t => { const diff = (Number(CHEERS[t]) || 0) - (Number(prev[t]) || 0); if (diff > 0) cheerBurst(t, diff) });
+    cheerAlerts(prev, CHEERS);
+  }
+
+  /* Cheer Rush (data/config.json "cheer_rush"): a banner counts down to it; while it runs, phones count every cheer double
+     and the TV jumps to the race and holds it until the rush ends. */
+  let RUSH = null;
+  function tickRush() {
+    if (!cheerOn || !window.TTCheer) return;
+    const was = !!(RUSH && RUSH.active); RUSH = window.TTCheer.rush(CFG.cheer_rush);
+    const bar = $("rushBar"), on = !!(RUSH && RUSH.active);
+    if (!RUSH) bar.hidden = true;
+    else {
+      bar.hidden = false; bar.classList.toggle("on", on);
+      bar.innerHTML = on ? `<b>Cheer Rush!</b><span>Every cheer counts double</span><i>${window.TTCheer.clock(RUSH.endsIn)}</i>`
+        : `<b>Cheer Rush</b><span>starts in</span><i>${window.TTCheer.clock(RUSH.startsIn)}</i><span>Get your phones ready</span>`;
+    }
+    document.documentElement.classList.toggle("rushing", on);
+    if (on && !was && isTv() && !celBusy) { const i = slides().findIndex(x => x.k === "race"); if (i >= 0) { if (tvSlide !== i) showSlide(i); tvRestart() } }
+  }
+
+  /* Alerts on the TV when a team's fans pass a milestone (100, 250, 500, 1,000 then every 1,000) or overtake another team. */
+  const milestone = n => n >= 1000 ? Math.floor(n / 1000) * 1000 : [500, 250, 100].find(m => n >= m) || 0;
+  const alertQ = []; let alertBusy = false, lastOvertake = 0;
+  function cheerAlerts(prev, now) {
+    if (!isTv()) return;
+    const c = (o, t) => Number(o[t]) || 0;
+    TEAMS.forEach(t => { const m = milestone(c(now, t)); if (m > milestone(c(prev, t))) alertQ.push({ t, title: `${teamName(t)} fans hit ${fmtN(m)} cheers!`, sub: captain(t) ? `Cheering for Captain ${captain(t)}` : "" }) });
+    if (Date.now() - lastOvertake > 20000) {
+      const passes = TEAMS.map(t => ({ t, over: TEAMS.filter(u => u !== t && c(prev, t) <= c(prev, u) && c(now, t) > c(now, u)) }))
+        .filter(x => x.over.length && c(now, x.t) >= 50);
+      if (passes.length) {
+        const x = passes.sort((a, b) => c(now, b.t) - c(now, a.t))[0], u = x.over.sort((a, b) => c(now, b) - c(now, a))[0];
+        const top = TEAMS.every(v => v === x.t || c(now, v) < c(now, x.t));
+        alertQ.push({ t: x.t, title: top ? `${teamName(x.t)} fans take the lead!` : `${teamName(x.t)} fans overtake ${teamName(u)}!`, sub: `${fmtN(c(now, x.t))} cheers and counting` });
+        lastOvertake = Date.now();
+      }
+    }
+    if (!alertBusy) nextAlert();
+  }
+  function nextAlert() {
+    const a = alertQ.shift(), box = $("cAlert"); if (!a) { alertBusy = false; box.hidden = true; return }
+    alertBusy = true;
+    box.style.setProperty("--tc", `var(--t${a.t})`);
+    const img = box.querySelector("img"); if (art(a.t, "run")) { img.src = art(a.t, "run"); img.hidden = false } else img.hidden = true;
+    box.querySelector("b").textContent = a.title; box.querySelector("em").textContent = a.sub;
+    box.hidden = false; box.classList.remove("show"); void box.offsetWidth; box.classList.add("show");
+    cheerBurst(a.t, 8);
+    setTimeout(nextAlert, 4600);
   }
   const fmtN = n => Number(n || 0).toLocaleString("en-IN");
   function renderFans() {
@@ -376,7 +425,8 @@
     return list;
   }
   const slideDur = s => s && s.k === "spot" ? Math.max(6, Number(CFG.tv_spot_seconds) || 11) * 1000
-    : s && s.k === "race" && cheerOn ? Math.max(tvDur, (Number(CFG.tv_race_seconds) || 20) * 1000) : tvDur;   // longer, so people can scan and cheer
+    : s && s.k === "race" && cheerOn ? (RUSH && RUSH.active ? Math.max(tvDur, RUSH.endsIn + 800)        // hold the race for the whole Cheer Rush
+      : Math.max(tvDur, (Number(CFG.tv_race_seconds) || 20) * 1000)) : tvDur;                              // longer, so people can scan and cheer
   // Shrink the slide to fit the screen whatever the TV's resolution or browser bars.
   function fitSlide() {
     const main = document.querySelector("main"); main.style.zoom = "";
@@ -550,7 +600,7 @@
   let spotOn = false;
   function showMoment(m, asSlide) {
     const run = ++momentRun, el = $("celebrate"); spotOn = !!asSlide; fxRun++;
-    el.style.setProperty("--wc", TEAMCOL(m.team));
+    el.style.setProperty("--wc", TEAMCOL(m.team)); el.style.setProperty("--wcf", m.team === 1 ? "#fff" : "#0F1E2C");
     $("celKick").textContent = m.kick; $("celTag").textContent = m.tag;
     $("celTrophy").toggleAttribute("hidden", !m.big);   // an SVG has no .hidden property
     $("celName").innerHTML = m.name.split(" ").map((w, i) => `<span style="animation-delay:${.3 + i * .12}s">${esc(w)}</span>`).join(" ");

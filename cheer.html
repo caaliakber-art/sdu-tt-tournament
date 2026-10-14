@@ -24,6 +24,7 @@
 </header>
 
 <main class="wrap cheer">
+  <div class="rush" id="rush" role="status" hidden></div>
   <section class="card" id="pick" hidden>
     <div class="head"><h2>Who are you cheering for?</h2></div>
     <div class="picks" id="picks"></div>
@@ -31,8 +32,10 @@
 
   <section class="card go" id="go" hidden>
     <div class="go-head"><span id="myTeam"></span><button type="button" class="linkbtn" id="change">Change team</button></div>
+    <div class="lvl" id="lvl"><span class="lvl-name" id="lvlName">New fan</span><span class="lvl-bar"><b id="lvlBar"></b></span><span class="lvl-next" id="lvlNext"></span></div>
     <button type="button" class="cheer-btn" id="cheerBtn" aria-describedby="mineTxt">
       <img id="cheerImg" alt="">
+      <span class="combo" id="combo"><b id="comboTxt">Tap fast for a combo</b><i><em id="comboBar"></em></i></span>
       <span class="cb-label">Tap to cheer</span>
     </button>
     <p class="mine" id="mineTxt" aria-live="polite"><span>You: <b id="mine">0</b></span><span>Team total: <b id="teamTotal">0</b></span></p>
@@ -43,7 +46,7 @@
     <div class="meter" id="meter"></div>
   </section>
 
-  <p class="note" id="note">Cheers are anonymous and do not change team points. The loudest fans get a shout-out at the finals.</p>
+  <p class="note" id="note">Tap fast and steady to build a combo (x2, x3, then ON FIRE x5). During a Cheer Rush every cheer counts double. Cheers are anonymous and do not change team points.</p>
 </main>
 
 <footer class="sdufoot">
@@ -54,6 +57,7 @@
   </div>
 </footer>
 <div class="fx" id="fx" aria-hidden="true"></div>
+<div class="levelup" id="levelUp" role="status" hidden><span>Level up</span><b id="levelUpName"></b><em id="levelUpNext"></em></div>
 <script src="assets/cheerdb.js" defer></script>
 <script src="assets/cheer.js" defer></script>
 </body>

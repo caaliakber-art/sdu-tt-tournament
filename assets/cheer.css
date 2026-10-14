@@ -16,7 +16,7 @@ main.cheer{max-width:720px}
 .linkbtn{border:0;background:none;color:var(--accent);text-decoration:underline;text-underline-offset:3px;padding:4px}
 .cheer-btn{position:relative;display:grid;justify-items:center;align-content:end;gap:8px;width:100%;min-height:min(56vh,420px);padding:18px 12px 20px;border:0;border-radius:18px;background:radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--tc) 55%,#132A40) 0%,#132A40 75%);color:#fff;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;box-shadow:0 10px 30px rgba(15,30,44,.25)}
 .cheer-btn img{position:absolute;inset:14px 14px 70px;width:calc(100% - 28px);height:calc(100% - 84px);object-fit:contain;filter:drop-shadow(0 0 14px color-mix(in srgb,var(--tc) 70%,transparent));pointer-events:none}
-.cb-label{position:relative;font:800 clamp(26px,7vw,40px) var(--f-display);letter-spacing:.08em;text-transform:uppercase;background:var(--tc);color:#0F1E2C;padding:8px 22px;border-radius:99px}
+.cb-label{position:relative;font:800 clamp(26px,7vw,40px) var(--f-display);letter-spacing:.08em;text-transform:uppercase;background:var(--tc);color:var(--tcf,#0F1E2C);padding:8px 22px;border-radius:99px}
 .cheer-btn.hit{animation:hit .18s ease-out}
 .cheer-btn.hit img{animation:hitimg .25s ease-out}
 @keyframes hit{50%{transform:scale(.97)}}
@@ -31,9 +31,43 @@ main.cheer{max-width:720px}
 .mbar b{display:block;height:100%;border-radius:99px;background:var(--tc);transition:width .6s ease}
 .mnum{text-align:right;font:700 16px var(--f-display);font-variant-numeric:tabular-nums}
 .mrow.me .mname{color:var(--accent)}
-.loud{font:700 10px var(--f-display);font-style:normal;letter-spacing:.1em;padding:2px 6px;border-radius:99px;background:var(--tc);color:#0F1E2C}
+.loud{font:700 10px var(--f-display);font-style:normal;letter-spacing:.1em;padding:2px 6px;border-radius:99px;background:var(--tc);color:var(--tcf,#0F1E2C)}
 .note{margin:0;text-align:center;color:var(--muted);font-size:13px}
 .fx{position:fixed;inset:0;pointer-events:none;z-index:30;overflow:hidden}
 .fx span{position:absolute;font-size:26px;transform:translate(-50%,-50%);animation:fly .9s ease-out forwards}
 @keyframes fly{to{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) rotate(var(--r)) scale(1.3);opacity:0}}
 @media (prefers-reduced-motion:reduce){.cheer-btn.hit,.cheer-btn.hit img{animation:none}.mbar b{transition:none}}
+/* Game layer: levels, combos, Cheer Rush, level-up */
+.lvl{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.lvl-name{font:800 14px var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--tcf,#0F1E2C);background:var(--tc);padding:3px 10px;border-radius:99px}
+.lvl[data-level="0"] .lvl-name{background:var(--tag-bg);color:var(--tag-fg)}
+.lvl[data-level="4"] .lvl-name{background:linear-gradient(90deg,#E9806E,#F5C451,#00F6ED);box-shadow:0 0 12px rgba(245,196,81,.6)}
+.lvl-bar{height:8px;border-radius:99px;background:var(--zebra);overflow:hidden}
+.lvl-bar b{display:block;height:100%;background:var(--tc);border-radius:99px;transition:width .3s ease}
+.lvl-next{white-space:nowrap}
+.combo{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:grid;gap:5px;justify-items:center;width:min(80%,280px);pointer-events:none}
+.combo b{font:800 15px var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.75);padding:3px 12px;border-radius:99px;background:rgba(15,30,44,.55);white-space:nowrap}
+.combo i{display:block;width:100%;height:6px;border-radius:99px;background:rgba(255,255,255,.18);overflow:hidden}
+.combo em{display:block;height:100%;width:0;background:var(--tc);border-radius:99px;transition:width .15s linear}
+.combo[data-mult="2"] b{color:var(--tcf,#0F1E2C);background:var(--tc);font-size:18px}
+.combo[data-mult="3"] b{color:#0F1E2C;background:#F5C451;font-size:21px;animation:cpulse .5s ease-in-out infinite alternate}
+.combo[data-mult="5"] b{color:#fff;background:linear-gradient(90deg,#E75A7C,#E9806E,#F5C451);font-size:24px;animation:cpulse .3s ease-in-out infinite alternate;box-shadow:0 0 18px rgba(233,128,110,.8)}
+.combo[data-mult="5"] em{background:linear-gradient(90deg,#E75A7C,#F5C451)}
+@keyframes cpulse{to{transform:scale(1.08)}}
+.cheer-btn.fire{box-shadow:0 0 0 4px #E9806E,0 0 40px 6px rgba(233,128,110,.75)}
+.cheer-btn.fire img{filter:drop-shadow(0 0 22px #F5C451) saturate(1.2)}
+.fx .plus{font:800 30px var(--f-display);color:#F5C451;text-shadow:0 2px 6px rgba(0,0,0,.4);animation:plus .8s ease-out forwards}
+@keyframes plus{to{transform:translate(-50%,-160%) scale(1.3);opacity:0}}
+.rush{display:flex;flex-wrap:wrap;gap:4px 8px;justify-content:center;align-items:baseline;text-align:center;padding:12px 16px;border-radius:12px;background:var(--tag-bg);color:var(--fg);font-size:15px}
+.rush b{font:800 18px var(--f-display);letter-spacing:.08em;text-transform:uppercase}
+.rush span{font:800 18px var(--f-display);font-variant-numeric:tabular-nums}
+.rush.on{background:linear-gradient(90deg,#E9806E,#F5C451);color:#0F1E2C;box-shadow:0 6px 20px rgba(245,196,81,.45);animation:cpulse .6s ease-in-out infinite alternate}
+body.rushing .cheer-btn{box-shadow:0 0 0 4px #F5C451,0 10px 30px rgba(15,30,44,.25)}
+body.rushing .cb-label{background:#F5C451;color:#0F1E2C}
+.levelup{position:fixed;left:50%;top:38%;z-index:40;transform:translate(-50%,-50%);display:grid;justify-items:center;gap:4px;padding:22px 34px;border-radius:18px;background:#132A40;color:#fff;box-shadow:0 0 0 4px #F5C451,0 20px 60px rgba(0,0,0,.45);text-align:center;pointer-events:none}
+.levelup span{font:700 14px var(--f-display);letter-spacing:.3em;text-transform:uppercase;color:#F5C451}
+.levelup b{font:800 40px var(--f-display);text-transform:uppercase;letter-spacing:.04em}
+.levelup em{font-style:normal;font-size:14px;color:var(--sky)}
+.levelup.show{animation:lvlpop 2.6s ease forwards}
+@keyframes lvlpop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}20%{transform:translate(-50%,-50%) scale(1)}85%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.combo b,.rush.on,.levelup.show{animation:none}}
