@@ -81,6 +81,6 @@
    "run": "assets/art/bhuvanesh-run.webp"
   }
  },
- "cheer_db": "",
+ "cheer_db": "https://sdu-tt-cheer-default-rtdb.asia-southeast1.firebasedatabase.app",
  "tv_race_seconds": 20
 }
