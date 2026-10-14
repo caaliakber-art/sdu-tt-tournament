@@ -286,6 +286,9 @@ main.enter{animation:slidein .5s ease-out}
 @keyframes artL{from{opacity:0;transform:translateX(-55%)}to{opacity:1;transform:none}}
 @keyframes artR{from{opacity:0;transform:translateX(55%)}to{opacity:1;transform:none}}
 @keyframes bob{from{transform:translateY(0)}to{transform:translateY(-1.6%)}}
+.tv .celebrate.slide{bottom:52px}
+.tv .celebrate.slide .cel-art{height:calc(88vh - 52px)}
+@media (max-height:820px){.cel-card{gap:8px;padding:22px 36px 26px}.celebrate.art .cel-card{padding:22px 36px 26px}.cel-score{font-size:76px}.cel-trophy{width:64px;height:64px}.celebrate.art .cel-name{font-size:clamp(30px,4.2vw,64px)}.team.cel .tname{font-size:28px}.team.cel .tcap{font-size:18px}.team.cel .tsw{height:46px}.cel-team{padding:8px 18px}.cel-art figcaption{bottom:2.5vh;font-size:17px}}
 @media (max-width:900px),(orientation:portrait){.cel-art{display:none}.celebrate.art .cel-card{max-width:92vw}}
 @keyframes pop{from{transform:scale(.8);opacity:0}to{transform:none;opacity:1}}}
 
