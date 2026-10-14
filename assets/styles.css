@@ -396,6 +396,9 @@ tr.lead td:first-child{box-shadow:inset 4px 0 0 var(--salmon)}
 .tv[data-slide="race"] .lane.scale{height:28px}
 /* Fan cheers on the race */
 .rhead{display:grid;gap:4px}
+.cheerlinks{display:flex;flex-wrap:wrap;gap:8px;align-self:center}
+.cheerlinks[hidden]{display:none}
+.cheerlink.alt{background:linear-gradient(90deg,#00F6ED,#F5C451);color:#0F1E2C}
 .cheerlink{align-self:center;text-decoration:none;font:700 14px var(--f-display);letter-spacing:.06em;text-transform:uppercase;padding:9px 16px;border-radius:99px;background:var(--accent);color:var(--on-accent)}
 .cheerqr{align-items:center;gap:14px;max-width:360px}
 .cheerqr #qrSvg{flex:none;background:#fff;border-radius:10px;padding:4px;line-height:0}

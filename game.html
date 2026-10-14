@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Smash for your team | TT Tournament 2026 | SDU</title>
+<meta name="description" content="A quick table tennis game: hit the targets and every point becomes a cheer for your team.">
+<link rel="icon" type="image/png" href="assets/sdu-stripe.png">
+<link rel="stylesheet" href="assets/styles.css">
+<link rel="stylesheet" href="assets/smash.css">
+</head>
+<body class="smash-page">
+<header class="band slim">
+  <div class="wrap topline">
+    <img class="logo" src="assets/sdu-logo-white.png" alt="Singhvi Dev &amp; Unni LLP, Chartered Accountants" width="515" height="235">
+    <span class="sm-title">Smash for your team</span>
+    <a class="btn" href="cheer.html">Cheer</a>
+  </div>
+</header>
+
+<main class="smash">
+  <div class="hud" id="hud">
+    <span class="hud-team" id="hudTeam"></span>
+    <span class="hud-score"><b id="score">0</b><em>pts</em></span>
+    <span class="hud-combo" id="combo"></span>
+    <span class="hud-lives" id="lives" aria-label="Lives"></span>
+    <span class="hud-time" id="time">60</span>
+  </div>
+  <div class="stage" id="stage">
+    <canvas id="cv" aria-label="Table tennis game. Move your paddle left and right to return the ball and hit the targets."></canvas>
+
+    <div class="ov" id="ovPick" hidden>
+      <h1>Who are you playing for?</h1>
+      <div class="ov-picks" id="picks"></div>
+    </div>
+
+    <div class="ov" id="ovStart" hidden>
+      <img class="ov-cap" id="startImg" alt="">
+      <h1>Smash for <span id="startTeam"></span></h1>
+      <ul class="rules">
+        <li>Slide your paddle to return the ball. Hit it with the edge of the paddle to angle your shot.</li>
+        <li>Hit the targets on the far side: <b class="t1">1</b> <b class="t3">3</b> <b class="t5">5</b> points.</li>
+        <li>Keep the rally going for a combo. Three misses and you're out.</li>
+        <li>Every point becomes a cheer for your team.</li>
+      </ul>
+      <button type="button" class="go-btn" id="startBtn">Serve!</button>
+      <p class="ov-small"><span id="bestTxt"></span> <button type="button" class="linkbtn" id="changeTeam">Change team</button></p>
+    </div>
+
+    <div class="ov" id="ovEnd" hidden>
+      <img class="ov-cap" id="endImg" alt="">
+      <span class="end-kick" id="endKick">Game over</span>
+      <div class="end-score"><b id="endScore">0</b><em>points</em></div>
+      <p class="end-msg" id="endMsg"></p>
+      <p class="end-cheers" id="endCheers"></p>
+      <div class="end-btns"><button type="button" class="go-btn" id="againBtn">Play again</button><a class="ghost-btn" href="cheer.html">Cheer page</a></div>
+    </div>
+
+    <div class="flash" id="flash" aria-live="polite"></div>
+  </div>
+  <p class="sm-note">Points from each game go to your team's cheers (up to 200 a game, double during a Cheer Rush). Your best score stays on this device.</p>
+</main>
+<script src="assets/cheerdb.js" defer></script>
+<script src="assets/smash.js" defer></script>
+</body>
+</html>

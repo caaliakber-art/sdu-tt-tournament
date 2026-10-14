@@ -71,3 +71,6 @@ body.rushing .cb-label{background:#F5C451;color:#0F1E2C}
 .levelup.show{animation:lvlpop 2.6s ease forwards}
 @keyframes lvlpop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}20%{transform:translate(-50%,-50%) scale(1)}85%{opacity:1}100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.combo b,.rush.on,.levelup.show{animation:none}}
+.smash-cta{display:grid;gap:2px;padding:14px 18px;border-radius:14px;text-decoration:none;color:#0F1E2C;background:linear-gradient(90deg,#00F6ED,#F5C451);box-shadow:0 8px 24px rgba(0,246,237,.25)}
+.smash-cta b{font:800 22px var(--f-display);letter-spacing:.08em;text-transform:uppercase}
+.smash-cta span{font-size:14px}
