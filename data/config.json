@@ -52,27 +52,33 @@
  "team_art": {
   "1": {
    "win": "assets/art/neha-win.webp",
-   "loss": "assets/art/neha-loss.webp"
+   "loss": "assets/art/neha-loss.webp",
+   "run": "assets/art/neha-run.webp"
   },
   "2": {
    "win": "assets/art/karthik-win.webp",
-   "loss": "assets/art/karthik-loss.webp"
+   "loss": "assets/art/karthik-loss.webp",
+   "run": "assets/art/karthik-run.webp"
   },
   "3": {
    "win": "assets/art/mamta-win.webp",
-   "loss": "assets/art/mamta-loss.webp"
+   "loss": "assets/art/mamta-loss.webp",
+   "run": "assets/art/mamta-run.webp"
   },
   "4": {
    "win": "assets/art/naman-win.webp",
-   "loss": "assets/art/naman-loss.webp"
+   "loss": "assets/art/naman-loss.webp",
+   "run": "assets/art/naman-run.webp"
   },
   "5": {
    "win": "assets/art/shravanth-win.webp",
-   "loss": "assets/art/shravanth-loss.webp"
+   "loss": "assets/art/shravanth-loss.webp",
+   "run": "assets/art/shravanth-run.webp"
   },
   "6": {
    "win": "assets/art/bhuvanesh-win.webp",
-   "loss": "assets/art/bhuvanesh-loss.webp"
+   "loss": "assets/art/bhuvanesh-loss.webp",
+   "run": "assets/art/bhuvanesh-run.webp"
   }
  }
 }

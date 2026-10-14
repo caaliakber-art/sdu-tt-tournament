@@ -116,6 +116,37 @@
     const moves = {}; if (snap && snap.ranks) TEAMS.forEach(t => { if (snap.ranks[t]) moves[t] = snap.ranks[t] - ranks[t] });
     store.set("tt_ranks", JSON.stringify({ updated: RES.updated, ranks, moves })); return moves;
   }
+  /* Race for Best Team: each captain runs in their team's lane; distance = team points (leader near the finish). */
+  const ordTxt = n => n + ({ 1: "st", 2: "nd", 3: "rd" }[n] || "th");
+  function renderRace(order, ranks) {
+    const box = $("race"); if (!box) return;
+    const top = Math.max(1, ...order.map(r => r.pts)), pos = v => (v / top * 0.9).toFixed(4);
+    if (box.dataset.n !== String(TEAMS.length)) {
+      box.dataset.n = TEAMS.length;
+      box.innerHTML = TEAMS.map(t => `<div class="lane" data-t="${t}" style="--tc:var(--t${t})"><div class="lane-id">${teamBlock(t, "", true)}<span class="lpts"></span></div><div class="track"><div class="runner" style="--p:0"><span class="rtag"></span>${art(t, "run") ? `<img src="${esc(art(t, "run"))}" alt="${esc(captain(t) || teamName(t))}">` : `<i class="rdot">${t}</i>`}</div></div></div>`).join("")
+        + `<div class="lane scale" aria-hidden="true"><div class="lane-id"></div><div class="track" id="raceScale"></div></div>`;
+    }
+    const step = top > 40 ? 20 : top > 15 ? 10 : 5;
+    $("raceScale").innerHTML = Array.from({ length: Math.floor(top / step) + 1 }, (_, i) => i * step).map(v => `<span style="--p:${pos(v)}">${v}</span>`).join("");
+    const rankCount = {}; order.forEach(r => rankCount[ranks[r.t]] = (rankCount[ranks[r.t]] || 0) + 1);
+    order.forEach(r => {
+      const lane = box.querySelector(`.lane[data-t="${r.t}"]`); if (!lane) return;
+      const run = lane.querySelector(".runner"), rk = ranks[r.t], p = pos(r.pts);
+      lane.classList.toggle("lead", rk === 1);
+      run.dataset.p = p; run.classList.toggle("back", p > 0.28);
+      lane.querySelector(".lpts").innerHTML = `<b>${r.pts}</b> · ${rankCount[rk] > 1 ? "=" : ""}${ordTxt(rk)}`;
+      run.querySelector(".rtag").innerHTML = `<b>${r.pts}</b> pts · ${rankCount[rk] > 1 ? "=" : ""}${ordTxt(rk)}${rk === 1 ? " · Leader" : ""}`;
+    });
+    requestAnimationFrame(() => box.querySelectorAll(".runner").forEach(el => el.style.setProperty("--p", el.dataset.p || 0)));
+  }
+  // On the TV, the race restarts from the start line each time its slide comes round.
+  function replayRace() {
+    const runs = document.querySelectorAll("#race .runner"); if (!runs.length) return;
+    runs.forEach(el => { el.style.transition = "none"; el.style.setProperty("--p", 0) });
+    void document.body.offsetWidth;
+    runs.forEach(el => el.style.transition = "");
+    setTimeout(() => runs.forEach(el => el.style.setProperty("--p", el.dataset.p || 0)), 350);
+  }
   function renderTop() {
     const order = teamScores();
     let rank = 0, prev = null; const ranks = {};
@@ -123,6 +154,7 @@
     const moves = rankMoves(ranks);
     const mv = t => moves[t] > 0 ? `<span class="mv up" title="Up ${moves[t]}">▲${moves[t]}</span>` : moves[t] < 0 ? `<span class="mv down" title="Down ${-moves[t]}">▼${-moves[t]}</span>` : "";
     $("teamTbl").tBodies[0].innerHTML = order.map(r => `<tr class="${ranks[r.t] === 1 ? "lead" : ""}"><td class="rk">${ranks[r.t]}${mv(r.t)}</td><td class="l">${teamBlock(r.t)}${ranks[r.t] === 1 ? '<span class="leadtag">Leader</span>' : ""}</td><td>${r.lw}</td><td>${r.ko}</td><td>${r.bonus}</td><td class="big">${r.pts}</td></tr>`).join("");
+    renderRace(order, ranks);
     if (feedMode === "res") {
       $("rTitle").textContent = "Recent results";
       const kos = KO.filter(k => k.winner).slice().reverse();
@@ -288,6 +320,7 @@
     const tm = todayMoments();
     if (tm.length) tm.forEach((m, i) => list.push({ k: "spot", m, label: `Results · ${todayLabel()} · ${i + 1} of ${tm.length}` }));
     else { const m = spotlight(); if (m) list.push({ k: "spot", m, label: "Spotlight" }) }
+    list.push({ k: "race", label: "Race for Best Team" });
     const tp = todayPending(); if (tp.lunch.length + tp.evening.length) list.push({ k: "today", label: `Still to play · ${todayLabel()}` });
     EVENTS.forEach(e => list.push({ k: "event", ev: e.k, label: e.n }));
     list.push({ k: "teams", part: 1, label: "Teams · 1 of 2" }, { k: "teams", part: 2, label: "Teams · 2 of 2" });
@@ -318,6 +351,7 @@
     document.documentElement.dataset.part = s.part || "";
     if (s.k === "event") { curEv = s.ev; renderEvent() }
     if (s.k === "today") renderToday();
+    if (s.k === "race") replayRace();
     if (s.k === "spot") showMoment(s.m, true); else if (spotOn && !celBusy) hideMoment();
     $("tvLabel").textContent = s.label;
     $("tvDots").innerHTML = list.map((_, j) => `<i class="${j === tvSlide ? "on" : ""}"></i>`).join("");
