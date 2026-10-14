@@ -29,30 +29,23 @@
   "Ali Akbar": "Ali Akber"
  },
  "today": {
-  "date": "2026-10-13",
+  "date": "2026-10-14",
   "lunch": [
-   79,
-   31,
-   41,
-   96,
-   65,
-   57
-  ],
-  "evening": [
-   20,
    38,
    42,
-   48,
    49,
-   68,
+   57,
    71,
-   72,
-   80,
-   86,
-   95
+   80
   ],
+  "evening": [],
   "knockout": [
-   "Mixed Doubles|Semifinal 1"
+   "Women's Singles|Semifinal 1",
+   "Women's Singles|Semifinal 2",
+   "Mixed Doubles|Semifinal 2",
+   "Men's Doubles|Quarterfinal 3",
+   "Men's Doubles|Quarterfinal 4",
+   "Mixed Doubles|Final"
   ]
  },
  "tv_spot_seconds": 11,

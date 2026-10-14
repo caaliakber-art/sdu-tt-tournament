@@ -12,10 +12,19 @@
    "seed2": "4",
    "c2": "Mamta",
    "t2": 3,
-   "sets": [],
-   "w1": null,
-   "w2": null,
-   "winner": null
+   "sets": [
+    [
+     16,
+     7
+    ],
+    [
+     16,
+     9
+    ]
+   ],
+   "w1": 2,
+   "w2": 0,
+   "winner": 1
   },
   {
    "format": "Women's Singles",
@@ -29,10 +38,23 @@
    "seed2": "3",
    "c2": "Subashree",
    "t2": 4,
-   "sets": [],
-   "w1": null,
-   "w2": null,
-   "winner": null
+   "sets": [
+    [
+     16,
+     12
+    ],
+    [
+     15,
+     17
+    ],
+    [
+     14,
+     16
+    ]
+   ],
+   "w1": 1,
+   "w2": 2,
+   "winner": 2
   },
   {
    "format": "Women's Singles",
@@ -41,11 +63,11 @@
    ],
    "round": "Final",
    "seed1": "SF1 Winner",
-   "c1": "TBD",
-   "t1": null,
+   "c1": "Neha P Jain",
+   "t1": 6,
    "seed2": "SF2 Winner",
-   "c2": "TBD",
-   "t2": null,
+   "c2": "Subashree",
+   "t2": 4,
    "sets": [],
    "w1": null,
    "w2": null,
@@ -61,8 +83,8 @@
    "c1": "Amrutha + Neha",
    "t1": 1,
    "seed2": "4",
-   "c2": "Subashree + Sanjana",
-   "t2": 4,
+   "c2": "Vaishnavi M + Keerthana",
+   "t2": 2,
    "sets": [],
    "w1": null,
    "w2": null,
@@ -75,11 +97,11 @@
    ],
    "round": "Semifinal 2",
    "seed1": "2",
-   "c1": "Neha P Jain + Drishti",
-   "t1": 6,
+   "c1": "Subashree + Sanjana",
+   "t1": 4,
    "seed2": "3",
-   "c2": "Vaishnavi M + Keerthana",
-   "t2": 2,
+   "c2": "Neha P Jain + Drishti",
+   "t2": 6,
    "sets": [],
    "w1": null,
    "w2": null,
@@ -144,10 +166,23 @@
    "seed2": "3",
    "c2": "Neha + Dhruv Jaju",
    "t2": 1,
-   "sets": [],
-   "w1": null,
-   "w2": null,
-   "winner": null
+   "sets": [
+    [
+     16,
+     10
+    ],
+    [
+     12,
+     16
+    ],
+    [
+     16,
+     10
+    ]
+   ],
+   "w1": 2,
+   "w2": 1,
+   "winner": 1
   },
   {
    "format": "Mixed Doubles",
@@ -159,12 +194,25 @@
    "c1": "Rithu + Darshan Patel",
    "t1": 3,
    "seed2": "SF2 Winner",
-   "c2": "TBD",
-   "t2": null,
-   "sets": [],
-   "w1": null,
-   "w2": null,
-   "winner": null
+   "c2": "Keerthana + Abhiram",
+   "t2": 2,
+   "sets": [
+    [
+     5,
+     21
+    ],
+    [
+     21,
+     18
+    ],
+    [
+     12,
+     21
+    ]
+   ],
+   "w1": 1,
+   "w2": 2,
+   "winner": 2
   },
   {
    "format": "Men's Singles",
@@ -245,10 +293,10 @@
     "MS2"
    ],
    "round": "Semifinal 1",
-   "seed1": "Awaiting QFs",
+   "seed1": "QF1 Winner",
    "c1": "TBD",
    "t1": null,
-   "seed2": "Awaiting QFs",
+   "seed2": "QF3 Winner",
    "c2": "TBD",
    "t2": null,
    "sets": [],
@@ -263,10 +311,10 @@
     "MS2"
    ],
    "round": "Semifinal 2",
-   "seed1": "Awaiting QFs",
+   "seed1": "QF2 Winner",
    "c1": "TBD",
    "t1": null,
-   "seed2": "Awaiting QFs",
+   "seed2": "QF4 Winner",
    "c2": "TBD",
    "t2": null,
    "sets": [],
@@ -341,10 +389,23 @@
    "seed2": "MD2 #2",
    "c2": "Sarvesh H + Deviprasad",
    "t2": 3,
-   "sets": [],
-   "w1": null,
-   "w2": null,
-   "winner": null
+   "sets": [
+    [
+     16,
+     12
+    ],
+    [
+     12,
+     16
+    ],
+    [
+     12,
+     16
+    ]
+   ],
+   "w1": 1,
+   "w2": 2,
+   "winner": 2
   },
   {
    "format": "Men's Doubles",
@@ -359,10 +420,19 @@
    "seed2": "MD2 #1",
    "c2": "Rohan + Bhuvanesh",
    "t2": 6,
-   "sets": [],
-   "w1": null,
-   "w2": null,
-   "winner": null
+   "sets": [
+    [
+     16,
+     6
+    ],
+    [
+     16,
+     8
+    ]
+   ],
+   "w1": 2,
+   "w2": 0,
+   "winner": 1
   },
   {
    "format": "Men's Doubles",
@@ -371,12 +441,12 @@
     "MD2"
    ],
    "round": "Semifinal 1",
-   "seed1": "Awaiting QFs",
+   "seed1": "QF1 Winner",
    "c1": "TBD",
    "t1": null,
-   "seed2": "Awaiting QFs",
-   "c2": "TBD",
-   "t2": null,
+   "seed2": "QF3 Winner",
+   "c2": "Sarvesh H + Deviprasad",
+   "t2": 3,
    "sets": [],
    "w1": null,
    "w2": null,
@@ -389,12 +459,12 @@
     "MD2"
    ],
    "round": "Semifinal 2",
-   "seed1": "Awaiting QFs",
+   "seed1": "QF2 Winner",
    "c1": "TBD",
    "t1": null,
-   "seed2": "Awaiting QFs",
-   "c2": "TBD",
-   "t2": null,
+   "seed2": "QF4 Winner",
+   "c2": "Nagarajan + Chandrashaker Joshi",
+   "t2": 6,
    "sets": [],
    "w1": null,
    "w2": null,

@@ -34,7 +34,7 @@ Rules for the Excel file:
 - Group standings: 2 points per win; ties split on point difference, then team number. Top 4 go through.
 - Q (qualified) and E (eliminated) are shown only once no remaining result can change them.
 - Knockout draw and knockout scores are read straight from the scorecard's **Finals** sheet, so the site always shows the coordinator's draw.
-- Team standings follow the **Best Team Ranking** sheet: 1 point per league win, 1 per quarterfinal or semifinal win, 5 for an event title, 3 for runner-up.
+- Team standings follow the **Best Team Ranking** sheet: 1 point per league win, 1 for each set won in a quarterfinal or semifinal (both sides, even in an unfinished tie), 5 for an event title, 3 for runner-up.
 
 ## 2. One-time setup
 

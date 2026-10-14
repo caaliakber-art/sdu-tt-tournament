@@ -94,16 +94,17 @@
       $("liveTxt").textContent = (window.TT_OFFLINE ? "Offline copy · " : "") + (isNaN(d) ? "Live" : `Updated ${d.getDate()} ${MON[d.getMonth()]}, ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`);
     }
   }
-  // Best Team scoring, as in the scorecard: 1 per league win, 1 per quarterfinal or semifinal win,
-  // 5 for an event title, 3 for runner-up (a final win does not also earn the 1 point).
+  // Best Team scoring, as in the scorecard: 1 per league win, 1 per set won in a quarterfinal or semifinal,
+  // 5 for an event title, 3 for runner-up (final sets earn nothing extra).
   function teamScores() {
     const s = {}; TEAMS.forEach(t => s[t] = { t, lw: 0, ko: 0, bonus: 0, d: 0 });
     for (const m of MATCHES) { const r = R[m.id]; if (!r) continue; s[r[0] > r[1] ? m.a : m.b].lw++; s[m.a].d += r[0] - r[1]; s[m.b].d += r[1] - r[0] }
     for (const k of KO) {
-      if (!k.winner) continue;
-      const wt = k.winner === 1 ? k.t1 : k.t2, lt = k.winner === 1 ? k.t2 : k.t1;
-      if (/^final/i.test(k.round)) { if (s[wt]) s[wt].bonus += 5; if (s[lt]) s[lt].bonus += 3 }
-      else if (s[wt]) s[wt].ko++;
+      if (/^final/i.test(k.round)) {
+        if (!k.winner) continue;
+        const wt = k.winner === 1 ? k.t1 : k.t2, lt = k.winner === 1 ? k.t2 : k.t1;
+        if (s[wt]) s[wt].bonus += 5; if (s[lt]) s[lt].bonus += 3;
+      } else (k.sets || []).forEach(p => { const t = p[0] > p[1] ? k.t1 : p[1] > p[0] ? k.t2 : null; if (s[t]) s[t].ko++ });   // every QF/SF set won counts, for both sides
     }
     Object.values(s).forEach(r => r.pts = r.lw + r.ko + r.bonus);
     return Object.values(s).sort((a, b) => b.pts - a.pts || a.t - b.t);
@@ -467,7 +468,7 @@
     const run = ++momentRun, el = $("celebrate"); spotOn = !!asSlide; fxRun++;
     el.style.setProperty("--wc", TEAMCOL(m.team));
     $("celKick").textContent = m.kick; $("celTag").textContent = m.tag;
-    $("celTrophy").hidden = !m.big;
+    $("celTrophy").toggleAttribute("hidden", !m.big);   // an SVG has no .hidden property
     $("celName").innerHTML = m.name.split(" ").map((w, i) => `<span style="animation-delay:${.3 + i * .12}s">${esc(w)}</span>`).join(" ");
     $("celA").textContent = "0"; $("celB").textContent = "0";
     $("celSets").innerHTML = "";

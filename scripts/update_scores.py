@@ -106,7 +106,7 @@ def read_knockout(wb, warnings, fixes=None):
         sets = []
         for n in (1, 2, 3):
             a, b = num(g(row, f"match/set {n}", 1)), num(g(row, f"match/set {n}", 2))
-            if a is not None and b is not None:
+            if a is not None and b is not None and (a or b):   # a 0-0 third set means it was not needed
                 sets.append([a, b])
         c1, c2 = fix_names(clean(g(row, "competitor 1")), fixes), fix_names(clean(g(row, "competitor 2")), fixes)
         winner = fix_names(clean(g(row, "winner")), fixes)
