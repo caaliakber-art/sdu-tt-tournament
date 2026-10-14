@@ -91,7 +91,7 @@
     $("progBar").style.width = (MATCHES.length ? played / MATCHES.length * 100 : 0) + "%";
     if (RES.updated) {
       const d = new Date(RES.updated);
-      $("liveTxt").textContent = (window.TT_OFFLINE ? "Offline copy · " : "") + (isNaN(d) ? "Live" : `Updated ${d.getDate()} ${MON[d.getMonth()]}, ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`);
+      $("liveTxt").textContent = (window.TT_OFFLINE ? "Offline copy · " : RES.live ? "Live · " : "") + (isNaN(d) ? "Live" : `Updated ${d.getDate()} ${MON[d.getMonth()]}, ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`);
     }
   }
   // Best Team scoring, as in the scorecard: 1 per league win, 1 per set won in a quarterfinal or semifinal,
@@ -640,9 +640,39 @@
 
   // The offline file (tt-offline.html) carries its data in window.TT_OFFLINE instead of fetching it.
   async function getJSON(path) { const off = window.TT_OFFLINE; if (off && off[path]) return JSON.parse(JSON.stringify(off[path])); const r = await fetch(`${path}?t=${Date.now()}`, { cache: "no-store" }); if (!r.ok) throw new Error(path + " " + r.status); return r.json() }
+  /* Live Google Sheet (data/config.json "sheet_id"): when set, scores come straight from the sheet on every refresh,
+     so a score typed into the sheet reaches the site and the TV within about 30 seconds. The GitHub data stays as the fallback. */
+  let sheetNote = "";
+  async function liveSheet(cfg) {
+    if (!cfg.sheet_id || window.TT_OFFLINE) return null;
+    try {
+      await loadScript("assets/sheetfeed.js");
+      const d = await window.TTSheet.load(cfg.sheet_id, cfg.name_fixes, cfg.sheet_layout);
+      sheetNote = ""; return d;
+    } catch (e) { sheetNote = String(e && e.message || e); console.warn("Live sheet:", sheetNote); return null }
+  }
+  function mergeLive(res, results, ko, cfg) {
+    const iso = () => new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    let seen = {}; try { seen = JSON.parse(store.get("tt_live_seen") || "{}") } catch (_) {}
+    const first_seen = Object.assign({}, res.first_seen || {});
+    Object.keys(results).forEach(k => { if (!first_seen[k]) { if (!seen[k]) seen[k] = iso(); first_seen[k] = seen[k] } });
+    store.set("tt_live_seen", JSON.stringify(seen));
+    // "Updated" moves only when the sheet differs from what was last seen, so the time means something.
+    const sig = JSON.stringify([results, (ko.ties || []).map(t => [t.c1, t.c2, t.sets, t.winner])]);
+    let stamp = {}; try { stamp = JSON.parse(store.get("tt_live_sig") || "{}") } catch (_) {}
+    if (stamp.sig !== sig) { stamp = { sig, at: stamp.sig ? iso() : (res.updated || iso()) }; store.set("tt_live_sig", JSON.stringify(stamp)) }
+    return Object.assign({}, res, { results, first_seen, played: Object.keys(results).length, updated: stamp.at, live: true });
+  }
   async function refresh(first) {
     try {
-      const [fx, res, cfg, ko] = await Promise.all([getJSON("data/fixtures.json"), getJSON("data/results.json"), getJSON("data/config.json"), getJSON("data/knockout.json").catch(() => ({ ties: [] }))]);
+      let [fx, res, cfg, ko] = await Promise.all([getJSON("data/fixtures.json"), getJSON("data/results.json"), getJSON("data/config.json"), getJSON("data/knockout.json").catch(() => ({ ties: [] }))]);
+      const live = await liveSheet(cfg || {});
+      if (live && live.fixtures.matches.length === fx.matches.length) {
+        // Google drops numbers from a column that is mostly text (the numeric seeds), so keep those from the last upload.
+        const base = {}; ((ko && ko.ties) || []).forEach(t => base[`${t.format}|${t.round}`] = t);
+        live.knockout.ties.forEach(t => { const b = base[`${t.format}|${t.round}`]; if (b) { if (!t.seed1) t.seed1 = b.seed1; if (!t.seed2) t.seed2 = b.seed2 } });
+        fx = live.fixtures; ko = live.knockout; res = mergeLive(res, live.results, ko, cfg);
+      }
       const newIds = first ? [] : Object.keys(res.results || {}).filter(k => !R[k]);
       const koKey = k => `${k.format}|${k.round}`;
       const prevKo = new Set(KO.filter(k => k.winner).map(koKey));
@@ -689,7 +719,7 @@
 
   route();
   refresh(true).then(() => {
-    const every = Math.max(20, Number(CFG.refresh_seconds) || 60) * 1000;
+    const every = (CFG.sheet_id ? 30 : Math.max(20, Number(CFG.refresh_seconds) || 60)) * 1000;   // a live sheet is checked every 30 seconds
     setInterval(() => refresh(false), every);
   });
 })();

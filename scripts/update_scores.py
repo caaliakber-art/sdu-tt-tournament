@@ -203,7 +203,9 @@ def main():
             roster[key].setdefault(str(t), p)
         matches.append({"id": mid, "day": day, "slot": slot_code(row[c_time]), "a": a, "b": b, "f": key})
 
-        score = clean(row[c_score]) if c_score is not None else ""
+        raw = row[c_score] if c_score is not None else None
+        # Google Sheets can turn a score typed as 21-5 into a date (21 May); read it back as day-month.
+        score = f"{raw.day}-{raw.month}" if isinstance(raw, datetime) else clean(raw)
         if not score:
             continue
         m = re.match(r"^(\d+)\s*[-–:]\s*(\d+)$", score)

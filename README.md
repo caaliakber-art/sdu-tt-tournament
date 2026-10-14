@@ -14,7 +14,17 @@ The site checks for new scores every minute, so a TV or an open Teams tab update
 
 ---
 
-## 1. Updating scores (after each session)
+## 1. Updating scores
+
+### Live: the Google Sheet (preferred)
+
+When `sheet_id` in `data/config.json` holds the ID of the scorecard as a Google Sheet, the site and the TV read the **Shuffled Matches** and **Finals** tabs straight from the sheet every 30 seconds. Type a score into the sheet and it appears within about half a minute, with the TV celebration. GitHub also refreshes the published data and the offline copy from the sheet every 30 minutes.
+
+- The sheet must be shared as **Anyone with the link: Viewer**.
+- Format the Score column as **plain text** (Format > Number > Plain text). Otherwise a score such as 21-5 can turn into a date. The site reads such dates back as day-month, but plain text avoids the problem.
+- Keep the tab names and the header rows where they are (row 2 in Shuffled Matches, row 4 in Finals).
+
+### Backup: upload the Excel (after each session)
 
 1. Open the repository on GitHub and go into the **scores** folder.
 2. Click **Add file > Upload files**.
@@ -124,6 +134,7 @@ This repository and site are public. They contain player names, teams, fixtures,
 - `index.html`, `assets/styles.css`, `assets/app.js`: the site. Plain HTML, CSS and JavaScript, no build step.
 - `scripts/update_scores.py`: reads `scores/Score_Card.xlsx` and writes `data/fixtures.json` and `data/results.json`.
 - `cheer.html`, `assets/cheer.js`, `assets/cheer.css`, `assets/cheerdb.js`: the cheer page and the live cheer tally (Firebase REST API, no SDK). `assets/qrcode.js` (MIT) draws the QR code on the TV.
+- `assets/sheetfeed.js`: reads the live Google Sheet (Google's visualization endpoint, no keys) with the same rules as `scripts/update_scores.py`.
 - `scripts/build_offline.py`: packs the site and current scores into the single offline file `tt-offline.html`.
 - `assets/fonts`: Roboto and Roboto Condensed (SIL Open Font License), self-hosted so the site does not depend on Google Fonts.
 - `.github/workflows/publish.yml`: on every commit, runs the scripts and publishes the site to GitHub Pages.

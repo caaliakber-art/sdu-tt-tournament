@@ -6,6 +6,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: "*/30 * * * *"   # with a live Google Sheet set, refresh the published data and offline copy every 30 minutes
 
 permissions:
   contents: read
@@ -28,6 +30,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      - name: Fetch the live Google Sheet, if one is set
+        run: |
+          ID=$(python -c "import json;print(json.load(open('data/config.json')).get('sheet_id',''))")
+          if [ -n "$ID" ]; then
+            mkdir -p scores
+            if curl -fsSL -o /tmp/live.xlsx "https://docs.google.com/spreadsheets/d/$ID/export?format=xlsx"; then
+              mv /tmp/live.xlsx scores/Score_Card.xlsx && echo "Using the live Google Sheet"
+            else
+              echo "Could not download the Google Sheet; using the uploaded Excel"
+            fi
+          fi
 
       - name: Convert scorecard to site data
         run: |
