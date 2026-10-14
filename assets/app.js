@@ -316,11 +316,10 @@
     return { lunch: pick(t.lunch), evening: pick(t.evening) };
   }
   function slides() {
-    const list = [{ k: "overview", label: "Team standings and results" }];
+    const list = [{ k: "race", label: "Race for Best Team" }, { k: "overview", label: "Team standings and results" }];
     const tm = todayMoments();
     if (tm.length) tm.forEach((m, i) => list.push({ k: "spot", m, label: `Results · ${todayLabel()} · ${i + 1} of ${tm.length}` }));
     else { const m = spotlight(); if (m) list.push({ k: "spot", m, label: "Spotlight" }) }
-    list.push({ k: "race", label: "Race for Best Team" });
     const tp = todayPending(); if (tp.lunch.length + tp.evening.length) list.push({ k: "today", label: `Still to play · ${todayLabel()}` });
     EVENTS.forEach(e => list.push({ k: "event", ev: e.k, label: e.n }));
     list.push({ k: "teams", part: 1, label: "Teams · 1 of 2" }, { k: "teams", part: 2, label: "Teams · 2 of 2" });
