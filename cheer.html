@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cheer for your team | TT Tournament 2026 | SDU</title>
+<meta name="description" content="Tap to cheer for your team in the SDU office table tennis tournament.">
+<link rel="icon" type="image/png" href="assets/sdu-stripe.png">
+<link rel="stylesheet" href="assets/styles.css">
+<link rel="stylesheet" href="assets/cheer.css">
+</head>
+<body class="cheer-page">
+<header class="band">
+  <div class="sdubars" aria-hidden="true"></div>
+  <div class="wrap topline">
+    <img class="logo" src="assets/sdu-logo-white.png" alt="Singhvi Dev &amp; Unni LLP, Chartered Accountants" width="515" height="235">
+    <a class="btn" href="./">Scoreboard</a>
+  </div>
+  <div class="wrap brand">
+    <h1>Cheer for your team</h1>
+    <p id="intro">Every tap pushes your captain's fan meter on the office TV.</p>
+  </div>
+  <div class="sdubars" aria-hidden="true"></div>
+</header>
+
+<main class="wrap cheer">
+  <section class="card" id="pick" hidden>
+    <div class="head"><h2>Who are you cheering for?</h2></div>
+    <div class="picks" id="picks"></div>
+  </section>
+
+  <section class="card go" id="go" hidden>
+    <div class="go-head"><span id="myTeam"></span><button type="button" class="linkbtn" id="change">Change team</button></div>
+    <button type="button" class="cheer-btn" id="cheerBtn" aria-describedby="mineTxt">
+      <img id="cheerImg" alt="">
+      <span class="cb-label">Tap to cheer</span>
+    </button>
+    <p class="mine" id="mineTxt" aria-live="polite"><span>You: <b id="mine">0</b></span><span>Team total: <b id="teamTotal">0</b></span></p>
+  </section>
+
+  <section class="card">
+    <div class="head"><h2>Fan meter</h2><span class="sub" id="meterSub">Live</span></div>
+    <div class="meter" id="meter"></div>
+  </section>
+
+  <p class="note" id="note">Cheers are anonymous and do not change team points. The loudest fans get a shout-out at the finals.</p>
+</main>
+
+<footer class="sdufoot">
+  <div class="sdubars" aria-hidden="true"></div>
+  <div class="wrap">
+    <img class="flogo" src="assets/sdu-logo-white.png" alt="Singhvi Dev &amp; Unni LLP" width="515" height="235">
+    <span><b>BENGALURU | MUMBAI</b> &nbsp;·&nbsp; www.sdu.works</span>
+  </div>
+</footer>
+<div class="fx" id="fx" aria-hidden="true"></div>
+<script src="assets/cheerdb.js" defer></script>
+<script src="assets/cheer.js" defer></script>
+</body>
+</html>

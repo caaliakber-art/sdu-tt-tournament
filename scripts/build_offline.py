@@ -48,7 +48,7 @@ def main():
     html = html.replace('src="assets/sdu-logo-white.png"', f'src="{data_uri(ROOT / "assets/sdu-logo-white.png")}"')
     html = html.replace('<script src="assets/app.js" defer></script>',
                         f"<script>window.TT_OFFLINE={blob};</script>\n<script>\n{app.replace('</script', '<\\/script')}\n</script>")
-    left = re.findall(r'(?:src|href)="(?!data:|https?:|#|mailto:|\$\{)[^"]+"', html)
+    left = re.findall(r'(?:src|href)="(?!data:|https?:|#|mailto:|\$\{|cheer\.html)[^"]+"', html)
     if left:
         sys.exit(f"Unpacked references left in the offline file: {left}")
     OUT.parent.mkdir(parents=True, exist_ok=True)

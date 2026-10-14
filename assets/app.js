@@ -123,7 +123,7 @@
     const top = Math.max(1, ...order.map(r => r.pts)), pos = v => (v / top * 0.9).toFixed(4);
     if (box.dataset.n !== String(TEAMS.length)) {
       box.dataset.n = TEAMS.length;
-      box.innerHTML = TEAMS.map(t => `<div class="lane" data-t="${t}" style="--tc:var(--t${t})"><div class="lane-id">${teamBlock(t, "", true)}<span class="lpts"></span></div><div class="track"><div class="runner" style="--p:0"><span class="rtag"></span>${art(t, "run") ? `<img src="${esc(art(t, "run"))}" alt="${esc(captain(t) || teamName(t))}">` : `<i class="rdot">${t}</i>`}</div></div></div>`).join("")
+      box.innerHTML = TEAMS.map(t => `<div class="lane" data-t="${t}" style="--tc:var(--t${t})"><div class="lane-id">${teamBlock(t, "", true)}<span class="lpts"></span><span class="lfans"><i><b></b></i><em></em></span></div><div class="track"><div class="runner" style="--p:0"><span class="rtag"></span>${art(t, "run") ? `<img src="${esc(art(t, "run"))}" alt="${esc(captain(t) || teamName(t))}">` : `<i class="rdot">${t}</i>`}</div></div></div>`).join("")
         + `<div class="lane scale" aria-hidden="true"><div class="lane-id"></div><div class="track" id="raceScale"></div></div>`;
     }
     const step = top > 40 ? 20 : top > 15 ? 10 : 5;
@@ -138,6 +138,56 @@
       run.querySelector(".rtag").innerHTML = `<b>${r.pts}</b> pts · ${rankCount[rk] > 1 ? "=" : ""}${ordTxt(rk)}${rk === 1 ? " · Leader" : ""}`;
     });
     requestAnimationFrame(() => box.querySelectorAll(".runner").forEach(el => el.style.setProperty("--p", el.dataset.p || 0)));
+    renderFans();
+  }
+
+  /* Fan cheers (data/config.json "cheer_db"): the office taps on cheer.html, the TV race shows each lane's
+     fan meter live and bursts from the captain as cheers land. Off in the offline copy. */
+  let CHEERS = null, cheerOn = false;
+  const scripts = {};
+  const loadScript = src => scripts[src] || (scripts[src] = new Promise((ok, no) => { const el = document.createElement("script"); el.src = src; el.onload = ok; el.onerror = no; document.head.appendChild(el) }));
+  const cheerUrl = () => new URL("cheer.html", location.href).href;
+  function startCheers() {
+    const db = String(CFG.cheer_db || "").trim();
+    if (cheerOn || !db || window.TT_OFFLINE) return;
+    cheerOn = true; $("race").classList.add("cheers-on"); $("cheerLink").hidden = false;
+    if (isTv()) requestAnimationFrame(fitSlide);
+    loadScript("assets/cheerdb.js").then(() => window.TTCheer.watch(db, onCheers)).catch(() => {});
+    loadScript("assets/qrcode.js").then(() => {
+      try { const q = window.qrcode(0, "M"); q.addData(cheerUrl()); q.make(); $("qrSvg").innerHTML = q.createSvgTag(4, 2); $("cheerQr").hidden = false; if (isTv()) requestAnimationFrame(fitSlide) } catch (_) {}
+    }).catch(() => {});
+  }
+  function onCheers(d) {
+    const prev = CHEERS; CHEERS = d || {};
+    renderFans();
+    if (prev) TEAMS.forEach(t => { const diff = (Number(CHEERS[t]) || 0) - (Number(prev[t]) || 0); if (diff > 0) cheerBurst(t, diff) });
+  }
+  const fmtN = n => Number(n || 0).toLocaleString("en-IN");
+  function renderFans() {
+    if (!cheerOn || !CHEERS) return;
+    const top = Math.max(1, ...TEAMS.map(t => Number(CHEERS[t]) || 0));
+    const loud = TEAMS.slice().sort((a, b) => (Number(CHEERS[b]) || 0) - (Number(CHEERS[a]) || 0))[0];
+    TEAMS.forEach(t => {
+      const lane = document.querySelector(`#race .lane[data-t="${t}"]`); if (!lane) return;
+      const n = Number(CHEERS[t]) || 0;
+      lane.querySelector(".lfans b").style.width = `${(n / top * 100).toFixed(1)}%`;
+      lane.querySelector(".lfans em").textContent = `${fmtN(n)} cheer${n === 1 ? "" : "s"}${t === loud && n > 0 ? " · Loudest fans" : ""}`;
+      lane.classList.toggle("loud", t === loud && n > 0);
+    });
+  }
+  const CHEER_BITS = ["👏", "🔥", "🏓", "💪", "🎉"];
+  function cheerBurst(t, n) {
+    if (reduceMotion()) return;
+    const lane = document.querySelector(`#race .lane[data-t="${t}"]`); if (!lane || !lane.offsetParent) return;
+    const run = lane.querySelector(".runner"), track = lane.querySelector(".track");
+    const x = run.offsetLeft + run.offsetWidth * .55, y = run.offsetTop + run.offsetHeight * .35;
+    for (let i = 0; i < Math.min(n, 8); i++) setTimeout(() => {
+      const s = document.createElement("span"); s.className = "cbit"; s.textContent = CHEER_BITS[(Math.random() * CHEER_BITS.length) | 0];
+      s.style.left = `${x}px`; s.style.top = `${y}px`;
+      s.style.setProperty("--dx", `${(Math.random() - .3) * 120}px`); s.style.setProperty("--dy", `${-60 - Math.random() * 70}px`);
+      track.appendChild(s); setTimeout(() => s.remove(), 1300);
+    }, i * 90);
+    run.classList.remove("cheered"); void run.offsetWidth; run.classList.add("cheered");
   }
   // On the TV, the race restarts from the start line each time its slide comes round.
   function replayRace() {
@@ -325,7 +375,8 @@
     list.push({ k: "teams", part: 1, label: "Teams · 1 of 2" }, { k: "teams", part: 2, label: "Teams · 2 of 2" });
     return list;
   }
-  const slideDur = s => s && s.k === "spot" ? Math.max(6, Number(CFG.tv_spot_seconds) || 11) * 1000 : tvDur;
+  const slideDur = s => s && s.k === "spot" ? Math.max(6, Number(CFG.tv_spot_seconds) || 11) * 1000
+    : s && s.k === "race" && cheerOn ? Math.max(tvDur, (Number(CFG.tv_race_seconds) || 20) * 1000) : tvDur;   // longer, so people can scan and cheer
   // Shrink the slide to fit the screen whatever the TV's resolution or browser bars.
   function fitSlide() {
     const main = document.querySelector("main"); main.style.zoom = "";
@@ -553,6 +604,7 @@
       $("live").classList.remove("off");
       newIds.forEach(id => fresh.set(String(id), Date.now()));
       if (first || res.updated !== lastUpdated) renderAll();
+      startCheers();
       const moments = newKo.map(koMoment).concat(newIds.map(id => MATCHES.find(x => String(x.id) === id)).filter(Boolean).map(leagueMoment));
       if (moments.length) celebrate(moments);
       if (isTv()) { if (first) tvDur = Math.max(5, Number(CFG.tv_seconds) || 12) * 1000; if (tvSlide < 0) { showSlide(0); tvRestart() } else requestAnimationFrame(fitSlide) }

@@ -80,5 +80,7 @@
    "loss": "assets/art/bhuvanesh-loss.webp",
    "run": "assets/art/bhuvanesh-run.webp"
   }
- }
+ },
+ "cheer_db": "",
+ "tv_race_seconds": 20
 }
