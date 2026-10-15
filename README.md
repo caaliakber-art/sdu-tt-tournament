@@ -90,6 +90,8 @@ The cheer game:
 "tug_of_war": [ { "start": "13:20", "end": "13:23", "pairs": [[2, 3], [4, 6], [1, 5]] } ]
 ```
 
+To see it any time, add `?tugdemo` to the address: `.../?tugdemo#tv` on the TV and `.../cheer.html?tugdemo` on a phone run a practice pull with simulated rivals. Nothing is saved.
+
 **Firebase rules.** In the Firebase console, open Realtime Database, then Rules, replace everything with this and click Publish. It keeps the cheer limits and adds the tug of war counters (one number per team per pull, same +25 limit). Until this is published, pulls do not register, but cheers carry on as before.
 
 ```json

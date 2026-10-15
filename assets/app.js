@@ -214,7 +214,7 @@
   function renderTugTv() {
     if (!TUG) return;
     const n = t => Number(TUGT[t]) || 0;
-    $("tugTitle").textContent = TUG.active ? "Tug of war!" : TUG.done ? "Tug of war · result" : "Tug of war";
+    $("tugTitle").textContent = window.TTCheer.demo ? "Tug of war · practice" : TUG.active ? "Tug of war!" : TUG.done ? "Tug of war · result" : "Tug of war";
     $("tugSub").textContent = TUG.active ? "Every team is pulling. Scan the QR code and tap for your team." : TUG.done ? "Well pulled, everyone." : "";
     $("tugClock").textContent = TUG.active ? `${window.TTCheer.clock(TUG.endsIn)} left` : TUG.done ? "Final" : `in ${window.TTCheer.clock(TUG.startsIn)}`;
     $("tugClock").classList.toggle("on", !!TUG.active);
