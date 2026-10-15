@@ -88,8 +88,8 @@
  "cheer_db": "https://sdu-tt-cheer-default-rtdb.asia-southeast1.firebasedatabase.app",
  "tv_race_seconds": 20,
  "tug_of_war": [
-  {"start": "13:20", "end": "13:23", "pairs": [[2, 3], [4, 6], [1, 5]]},
-  {"start": "18:20", "end": "18:23", "pairs": [[2, 3], [4, 6], [1, 5]]}
+  {"start": "13:00", "end": "13:03", "pairs": [[2, 3], [4, 6], [1, 5]]},
+  {"start": "18:00", "end": "18:03", "pairs": [[2, 3], [4, 6], [1, 5]]}
  ],
  "cheer_rush": [
   {

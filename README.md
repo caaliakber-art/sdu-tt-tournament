@@ -87,7 +87,7 @@ The cheer game:
 - **Tug of war.** At the times in `tug_of_war`, all six teams pull at once, in three pairs. Each tap on the cheer page pulls that team's rope (and still counts as a cheer). The TV jumps to the three ropes, holds them until the pull ends, then shows the result with the winners for about 15 seconds. Phones show their own rope, the gap to the rival, and a countdown from 10 minutes before. Set the pairs for each pull; pairing teams close in the standings makes the best contests:
 
 ```json
-"tug_of_war": [ { "start": "13:20", "end": "13:23", "pairs": [[2, 3], [4, 6], [1, 5]] } ]
+"tug_of_war": [ { "start": "13:00", "end": "13:03", "pairs": [[2, 3], [4, 6], [1, 5]] } ]
 ```
 
 To see it any time, add `?tugdemo` to the address: `.../?tugdemo#tv` on the TV and `.../cheer.html?tugdemo` on a phone run a practice pull with simulated rivals. Nothing is saved.
