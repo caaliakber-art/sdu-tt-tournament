@@ -150,6 +150,14 @@
   const cheerUrl = () => { const pub = String(CFG.public_url || "").trim(), q = /[?&]tugtest\b/.test(location.search) ? "?tugtest" : "";   // a test TV sends phones to the test pull
     try { return pub ? new URL("cheer.html" + q, pub).href : /^https?:/.test(location.protocol) ? new URL("cheer.html" + q, location.href).href : "" } catch (_) { return "" } };
   let qrOn = false;
+  // In the Claude preview the cheer database can't be reached, so cheer and Smash links open the live site in a new tab.
+  function liveLinks() {
+    const pub = String(CFG.public_url || "").trim();
+    if (liveLinks.done || !pub || !/^https?:$/.test(location.protocol) || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) return;
+    let host = ""; try { host = new URL(pub).hostname } catch (_) { return }
+    if (host === location.hostname) return; liveLinks.done = true;
+    document.querySelectorAll('a[href="cheer.html"], a[href="game.html"]').forEach(a => { a.href = new URL(a.getAttribute("href"), pub).href; a.target = "_blank"; a.rel = "noopener" });
+  }
   function startQr() {
     const url = cheerUrl(); if (qrOn || !url) return; qrOn = true;
     const make = () => { try {
@@ -754,7 +762,7 @@
       $("live").classList.remove("off");
       newIds.forEach(id => fresh.set(String(id), Date.now()));
       if (first || res.updated !== lastUpdated) renderAll();
-      startQr(); startCheers();
+      startQr(); liveLinks(); startCheers();
       const moments = newKo.map(koMoment).concat(newIds.map(id => MATCHES.find(x => String(x.id) === id)).filter(Boolean).map(leagueMoment));
       if (moments.length) celebrate(moments);
       if (isTv()) { if (first) tvDur = Math.max(5, Number(CFG.tv_seconds) || 12) * 1000; if (tvSlide < 0) { showSlide(0); tvRestart() } else requestAnimationFrame(fitSlide) }

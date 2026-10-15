@@ -289,6 +289,7 @@
   async function init() {
     try { CFG = await fetch(`data/config.json?t=${Date.now()}`, { cache: "no-store" }).then(r => r.json()) } catch (_) {}
     DB = String(CFG.cheer_db || "").trim();
+    if (window.TTCheer && window.TTCheer.liveBanner(CFG, "game.html", document.querySelector("main"))) DB = "";
     TEAMS = Object.keys(CFG.captains || CFG.team_names || { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1 }).map(Number).sort((a, b) => a - b);
     size();
     if (DB && window.TTCheer) window.TTCheer.settle(DB);

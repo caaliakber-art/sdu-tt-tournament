@@ -127,7 +127,20 @@
   }
   // Where the rope's centre sits for a pull of a against b: -1 (fully to a's side) to 1 (fully to b's side).
   const rope = (a, b) => { a = Number(a) || 0; b = Number(b) || 0; return Math.max(-1, Math.min(1, (b - a) / (a + b + 40))) };
+  // In a copy that can't reach the cheer database (the Claude preview), point people to the live site instead.
+  // Returns the live address of `page`, or "" when this already is the live site (or a local test or offline copy).
+  function liveUrl(cfg, page) {
+    const pub = String((cfg && cfg.public_url) || "").trim();
+    if (!pub || !/^https?:$/.test(location.protocol) || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) return "";
+    try { const u = new URL(page, pub); return u.hostname === location.hostname ? "" : u.href } catch (_) { return "" }
+  }
+  function liveBanner(cfg, page, where) {
+    const url = liveUrl(cfg, page); if (!url || !where) return "";
+    const a = document.createElement("a"); a.className = "livebanner"; a.href = url; a.target = "_blank"; a.rel = "noopener";
+    a.innerHTML = "<b>This is a preview copy</b><span>Cheers only count on the live page. Tap here to open it.</span>";
+    where.prepend(a); return url;
+  }
   const clock = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` };
 
-  const api = window.TTCheer = { watch, watchPath, add, addPath, rush, tug, rope, clock, owe, settle, owed: owedGet, lastStatus: null, demo: DEMO, test: TEST, until };
+  const api = window.TTCheer = { watch, watchPath, add, addPath, rush, tug, rope, clock, owe, settle, owed: owedGet, lastStatus: null, demo: DEMO, test: TEST, until, liveUrl, liveBanner };
 })();

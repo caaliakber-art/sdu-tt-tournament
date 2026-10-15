@@ -484,3 +484,7 @@ tr.lead td:first-child{box-shadow:inset 4px 0 0 var(--salmon)}
 .tv .rushbar{top:10px}
 @media (max-width:1500px){.tv .rushbar{padding:8px 16px;gap:8px;font-size:13px}.tv .rushbar b{font-size:22px}.tv .rushbar i{font-size:24px}.tv.noticebar header.band{padding-top:62px}}
 @media (max-width:1100px){.tv .rushbar span:last-child{display:none}}
+.livebanner{display:grid;gap:2px;margin:0 0 14px;padding:14px 18px;border-radius:14px;text-decoration:none;background:#F5C451;color:#0F1E2C;box-shadow:0 8px 24px rgba(245,196,81,.35)}
+.livebanner b{font:800 20px var(--f-display);letter-spacing:.06em;text-transform:uppercase}
+.livebanner span{font-size:15px}
+main.smash .livebanner{position:relative;z-index:5;margin:10px auto 0;max-width:520px}

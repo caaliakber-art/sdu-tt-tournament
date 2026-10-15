@@ -194,10 +194,13 @@
     await loadCfg();
     if (CFG.tournament) document.title = `Cheer for your team | ${CFG.tournament} | SDU`;
     DB = String(CFG.cheer_db || "").trim();
+    let preview = false;
+    if (window.TTCheer.liveBanner(CFG, "cheer.html" + location.search, document.querySelector("main"))) { DB = ""; preview = true }   // preview copy: send people to the live page
+    if (preview) { const s = document.querySelector(".smash-cta"); if (s) { s.href = window.TTCheer.liveUrl(CFG, "game.html"); s.target = "_blank"; s.rel = "noopener" } }
     TEAMS = Object.keys(CFG.captains || CFG.team_names || { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1 }).map(Number).sort((a, b) => a - b);
     all = Number(store.get("tt_cheer_all")) || 0;
     renderPicks(); renderMeter();
-    if (!DB) { $("intro").textContent = "Cheering opens soon. Check back on match day."; $("meterSub").textContent = "Not open yet"; return }
+    if (!DB) { $("intro").textContent = preview ? "Cheering happens on the live page. Use the button below." : "Cheering opens soon. Check back on match day."; $("meterSub").textContent = preview ? "Live page only" : "Not open yet"; return }
     window.TTCheer.watch(DB, d => { totals = d || {}; renderMine(); renderMeter() });
     window.TTCheer.settle(DB); setInterval(() => window.TTCheer.settle(DB), 30000);   // Smash scores saved while offline
     const saved = Number(store.get("tt_cheer_team"));
