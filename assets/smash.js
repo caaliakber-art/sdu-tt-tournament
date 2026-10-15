@@ -249,6 +249,7 @@
     if (!cheers) { el.textContent = ""; return }
     if (!DB || !window.TTCheer) { el.textContent = "Cheering isn't open yet, so this score wasn't counted."; return }
     el.textContent = `Sending ${cheers} cheers to ${tname(team)}…`;
+    await window.TTCheer.settle(DB);                             // anything left over from earlier games goes first
     let sent = 0;
     while (sent < cheers) {
       const n = Math.min(25, cheers - sent);
@@ -259,7 +260,12 @@
       store.set(`tt_cheer_mine_${team}`, (Number(store.get(`tt_cheer_mine_${team}`)) || 0) + sent);
       store.set("tt_cheer_all", (Number(store.get("tt_cheer_all")) || 0) + sent);
     }
-    el.textContent = sent === cheers ? `+${sent} cheers for ${tname(team)}${rush && rush.active ? " (Cheer Rush double!)" : ""}` : sent ? `${sent} of ${cheers} cheers sent. Check your connection.` : "Couldn't reach the cheer meter. Check your connection.";
+    const left = cheers - sent;
+    if (left) window.TTCheer.owe(team, left);                     // kept on this phone and sent on the next game or cheer page visit
+    const refused = [401, 403].includes(window.TTCheer.lastStatus);
+    el.textContent = !left ? `+${sent} cheers for ${tname(team)}${rush && rush.active ? " (Cheer Rush double!)" : ""}`
+      : `${sent ? `+${sent} sent. ` : ""}${refused ? "Cheer meter not taking scores yet" : "No connection"}. ${left} cheers saved on this phone; they'll go through later.`;
+    el.classList.toggle("warn", left > 0);
   }
 
   // ---------- input ----------
@@ -285,6 +291,7 @@
     DB = String(CFG.cheer_db || "").trim();
     TEAMS = Object.keys(CFG.captains || CFG.team_names || { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1 }).map(Number).sort((a, b) => a - b);
     size();
+    if (DB && window.TTCheer) window.TTCheer.settle(DB);
     const saved = Number(store.get("tt_cheer_team"));
     if (TEAMS.includes(saved)) { team = saved; startScreen() } else pick();
   }

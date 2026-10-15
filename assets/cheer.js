@@ -196,6 +196,7 @@
     renderPicks(); renderMeter();
     if (!DB) { $("intro").textContent = "Cheering opens soon. Check back on match day."; $("meterSub").textContent = "Not open yet"; return }
     window.TTCheer.watch(DB, d => { totals = d || {}; renderMine(); renderMeter() });
+    window.TTCheer.settle(DB); setInterval(() => window.TTCheer.settle(DB), 30000);   // Smash scores saved while offline
     const saved = Number(store.get("tt_cheer_team"));
     if (TEAMS.includes(saved)) choose(saved); else $("pick").hidden = false;
     setInterval(() => { flush(false); flushTug(false) }, FLUSH_MS);

@@ -41,7 +41,28 @@
       method: "PUT", keepalive: !!keepalive,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ".sv": { increment: n } }),
-    }).then(r => r.ok).catch(() => false);
+    }).then(r => { api.lastStatus = r.status; return r.ok }).catch(() => { api.lastStatus = 0; return false });
+  }
+
+  // Cheers that could not be sent (no signal, or the database refused them) are kept on this device and sent later,
+  // so a Smash score is never lost. Capped so a device can't hoard a huge burst.
+  const OWED = "tt_cheer_owed", OWED_MAX = 1000;
+  const owedGet = () => { try { return JSON.parse(localStorage.getItem(OWED) || "{}") || {} } catch (_) { return {} } };
+  const owedSet = o => { try { localStorage.setItem(OWED, JSON.stringify(o)) } catch (_) {} };
+  function owe(team, n) { const o = owedGet(); o[team] = Math.min(OWED_MAX, (Number(o[team]) || 0) + n); owedSet(o) }
+  let settling = false;
+  async function settle(db) {                                    // resolves the number of owed cheers delivered
+    if (settling || !clean(db)) return 0; settling = true; let done = 0;
+    try {
+      for (const t of Object.keys(owedGet())) {
+        while ((Number(owedGet()[t]) || 0) > 0) {
+          const n = Math.min(25, Number(owedGet()[t]));
+          if (!(await add(db, t, n))) return done;
+          const o = owedGet(); o[t] = Math.max(0, (Number(o[t]) || 0) - n); if (!o[t]) delete o[t]; owedSet(o); done += n;
+        }
+      }
+    } finally { settling = false }
+    return done;
   }
   const add = (db, team, n, keepalive) => addPath(db, `cheers/${team}`, n, keepalive);
 
@@ -81,5 +102,5 @@
   const rope = (a, b) => { a = Number(a) || 0; b = Number(b) || 0; return Math.max(-1, Math.min(1, (b - a) / (a + b + 40))) };
   const clock = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` };
 
-  window.TTCheer = { watch, watchPath, add, addPath, rush, tug, rope, clock };
+  const api = window.TTCheer = { watch, watchPath, add, addPath, rush, tug, rope, clock, owe, settle, owed: owedGet, lastStatus: null };
 })();

@@ -119,6 +119,8 @@ The cheer game:
 
 `game.html` (the site address ending in `/game.html`) is a one-minute table tennis game for phones and desktops. You slide your paddle to return the opponent's shots and aim your returns at targets on the far side (1, 3 or 5 points, multiplied by your rally combo). Three misses or 60 seconds ends the game. The score is added to your team's cheers (up to 200 a game, doubled during a Cheer Rush), and the captain's win or loss caricature appears at the end. Personal bests stay on the player's own device. It is linked from the cheer page, the race card and the TV QR code.
 
+If a score can't be sent (no signal, or the database refuses it), the cheers are saved on that phone and sent automatically the next time the person plays or opens the cheer page.
+
 ### Offline copy (no internet at the TV)
 
 Every publish also produces `tt-offline.html` (download it from `https://caaliakber-art.github.io/sdu-tt-tournament/tt-offline.html`, or run `python scripts/build_offline.py`). It is the whole site in one file: copy it to the TV laptop or a pen drive, double-click it, and click **TV mode**. It needs no internet, but its scores are frozen at the time it was made, so download a fresh copy after each scorecard update. The status chip reads "Offline copy" so nobody mistakes it for the live page.
