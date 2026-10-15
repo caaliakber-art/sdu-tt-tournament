@@ -108,7 +108,7 @@
     const before = levelOf(all);
     pending += n; mine += n; all += n;
     if (TUG && TUG.active && myPair()) { if (tugPendKey !== TUG.key) tugPending = 0; tugPending = Math.min(MAX_PENDING, tugPending + n); tugPendKey = TUG.key }   // a pull also counts as a cheer
-    if (!window.TTCheer.demo) { store.set(`tt_cheer_mine_${team}`, mine); store.set("tt_cheer_all", all) }   // practice taps aren't kept
+    if (!window.TTCheer.demo && !window.TTCheer.test) { store.set(`tt_cheer_mine_${team}`, mine); store.set("tt_cheer_all", all) }   // practice taps aren't kept
     const r = $("cheerBtn").getBoundingClientRect();
     burst(e.clientX || r.left + r.width / 2, e.clientY || r.top + r.height / 2, Math.min(2 + n, 7), n);
     const b = $("cheerBtn"); b.classList.remove("hit"); void b.offsetWidth; b.classList.add("hit");
@@ -166,7 +166,7 @@
       $("tugTitle").textContent = "Tug of war"; $("tugClock").textContent = `starts in ${window.TTCheer.clock(TUG.startsIn)}`;
       $("tugNote").textContent = `${tname(team)} v ${tname(rival)}. Get your team's fans together: every tap pulls the rope.`;
     } else if (TUG.active) {
-      $("tugTitle").textContent = window.TTCheer.demo ? "Practice pull" : "Tug of war!"; $("tugClock").textContent = `${window.TTCheer.clock(TUG.endsIn)} left`;
+      $("tugTitle").textContent = window.TTCheer.demo ? "Practice pull" : window.TTCheer.test ? "Test pull" : "Tug of war!"; $("tugClock").textContent = `${window.TTCheer.clock(TUG.endsIn)} left`;
       $("tugNote").textContent = a === b ? "Dead level. Pull!" : a > b ? `You're ahead by ${fmt(gap)}. Hold on!` : `Behind by ${fmt(gap)}. Pull harder!`;
     } else {
       $("tugTitle").textContent = a === b ? "It's a draw" : a > b ? "Your team won the pull!" : `${tname(rival)} won this one`;

@@ -5,6 +5,9 @@
   const clean = db => String(db || "").replace(/\/+$/, "");
   // Demo: add ?tugdemo to the address to see a practice tug of war at any time. Nothing is written to the database.
   const DEMO = /[?&]tugdemo\b/.test(location.search);
+  // Test: add ?tugtest to try a real pull with real phones. Pulls run on the live database every 3 minutes under separate
+  // test rounds (key ending -9xxx), only for people who open the test link. Taps don't add to the real cheer totals.
+  const TEST = !DEMO && /[?&]tugtest\b/.test(location.search);
   const sim = {}, simSubs = [], DEMO_T0 = Date.now();
   if (DEMO) setInterval(() => {
     [1, 2, 3, 4, 5, 6].forEach(t => { sim[t] = (sim[t] || 0) + Math.floor(Math.random() * (t === 2 || t === 4 ? 6 : 4)) });
@@ -45,6 +48,7 @@
   // Add n to a counter ("cheers/<team>" or "tug/<round>/<team>"). Resolves true on success.
   function addPath(db, path, n, keepalive) {
     if (DEMO) { const m = path.match(/^tug\/[^/]+\/(\d)$/); if (m) sim[m[1]] = (sim[m[1]] || 0) + n; api.lastStatus = 200; return Promise.resolve(true) }
+    if (TEST && !path.startsWith("tug/")) { api.lastStatus = 200; return Promise.resolve(true) }
     db = clean(db);
     return fetch(`${db}/${path}.json`, {
       method: "PUT", keepalive: !!keepalive,
@@ -61,7 +65,7 @@
   function owe(team, n) { const o = owedGet(); o[team] = Math.min(OWED_MAX, (Number(o[team]) || 0) + n); owedSet(o) }
   let settling = false;
   async function settle(db) {                                    // resolves the number of owed cheers delivered
-    if (settling || DEMO || !clean(db)) return 0; settling = true; let done = 0;
+    if (settling || DEMO || TEST || !clean(db)) return 0; settling = true; let done = 0;
     try {
       for (const t of Object.keys(owedGet())) {
         while ((Number(owedGet()[t]) || 0) > 0) {
@@ -102,6 +106,11 @@
       const c = Math.floor((now - DEMO_T0) / 180000), at = (now - DEMO_T0) % 180000, base = { key: `demo-${c}`, pairs: [[2, 3], [4, 6], [1, 5]] };
       return at < 150000 ? Object.assign({ active: true, endsIn: 150000 - at }, base) : Object.assign({ active: false, done: true, since: at - 150000 }, base);
     }
+    if (TEST) {                                                   // same clock for every device: 2.5-minute pull, 30 seconds of result
+      const c = Math.floor(now / 180000), at = now % 180000;
+      const base = { key: `${ymd(now).replace(/-/g, "")}-9${String(c % 1000).padStart(3, "0")}`, pairs: [[2, 3], [4, 6], [1, 5]] };
+      return at < 150000 ? Object.assign({ active: true, endsIn: 150000 - at }, base) : Object.assign({ active: false, done: true, since: at - 150000 }, base);
+    }
     let active = null, done = null, soon = null, next = null;
     for (const r of Array.isArray(list) ? list : []) {
       if (!r || !r.start || !r.end || (r.date && r.date !== ymd(now))) continue;
@@ -120,5 +129,5 @@
   const rope = (a, b) => { a = Number(a) || 0; b = Number(b) || 0; return Math.max(-1, Math.min(1, (b - a) / (a + b + 40))) };
   const clock = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` };
 
-  const api = window.TTCheer = { watch, watchPath, add, addPath, rush, tug, rope, clock, owe, settle, owed: owedGet, lastStatus: null, demo: DEMO, until };
+  const api = window.TTCheer = { watch, watchPath, add, addPath, rush, tug, rope, clock, owe, settle, owed: owedGet, lastStatus: null, demo: DEMO, test: TEST, until };
 })();

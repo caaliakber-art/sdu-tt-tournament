@@ -147,7 +147,8 @@
   const scripts = {};
   const loadScript = src => scripts[src] || (scripts[src] = new Promise((ok, no) => { const el = document.createElement("script"); el.src = src; el.onload = ok; el.onerror = no; document.head.appendChild(el) }));
   // The QR always points at the public site (config "public_url"), so it also works from the offline copy and the preview.
-  const cheerUrl = () => { const pub = String(CFG.public_url || "").trim(); try { return pub ? new URL("cheer.html", pub).href : /^https?:/.test(location.protocol) ? new URL("cheer.html", location.href).href : "" } catch (_) { return "" } };
+  const cheerUrl = () => { const pub = String(CFG.public_url || "").trim(), q = /[?&]tugtest\b/.test(location.search) ? "?tugtest" : "";   // a test TV sends phones to the test pull
+    try { return pub ? new URL("cheer.html" + q, pub).href : /^https?:/.test(location.protocol) ? new URL("cheer.html" + q, location.href).href : "" } catch (_) { return "" } };
   let qrOn = false;
   function startQr() {
     const url = cheerUrl(); if (qrOn || !url) return; qrOn = true;
@@ -226,7 +227,7 @@
   function renderTugTv() {
     if (!TUG) return;
     const n = t => Number(TUGT[t]) || 0;
-    $("tugTitle").textContent = window.TTCheer.demo ? "Tug of war · practice" : TUG.active ? "Tug of war!" : TUG.done ? "Tug of war · result" : "Tug of war";
+    $("tugTitle").textContent = window.TTCheer.demo ? "Tug of war · practice" : window.TTCheer.test && TUG.active ? "Tug of war · test" : TUG.active ? "Tug of war!" : TUG.done ? "Tug of war · result" : "Tug of war";
     $("tugSub").textContent = TUG.active ? "Every team is pulling. Scan the QR code and tap for your team." : TUG.done ? "Well pulled, everyone." : "";
     $("tugClock").textContent = TUG.active ? `${window.TTCheer.clock(TUG.endsIn)} left` : TUG.done ? "Final" : `in ${window.TTCheer.clock(TUG.startsIn)}`;
     $("tugClock").classList.toggle("on", !!TUG.active);
