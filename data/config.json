@@ -28,29 +28,7 @@
  "name_fixes": {
   "Ali Akbar": "Ali Akber"
  },
- "today": {
-  "date": "2026-10-14",
-  "lunch": [
-   38,
-   42,
-   49,
-   57,
-   71,
-   80
-  ],
-  "evening": [],
-  "knockout": [
-   "Women's Singles|Semifinal 1",
-   "Women's Singles|Semifinal 2",
-   "Mixed Doubles|Semifinal 2",
-   "Men's Doubles|Quarterfinal 3",
-   "Men's Doubles|Quarterfinal 4",
-   "Mixed Doubles|Final",
-   "Men's Singles|Quarterfinal 3",
-   "Women's Doubles|Semifinal 2",
-   "Women's Singles|Final"
-  ]
- },
+ "today": {"date": "2026-10-15", "lunch": [20], "evening": [], "knockout": ["Men's Doubles|Quarterfinal 2", "Men's Singles|Quarterfinal 4", "Men's Singles|Quarterfinal 2"], "hype": {"Men's Doubles|Quarterfinal 2": "First v second in the Best Team race, one point apart. Every set won swings the lead."}, "order": ["Men's Doubles|Quarterfinal 2", "Men's Singles|Quarterfinal 4", "20", "Men's Singles|Quarterfinal 2"]},
  "tv_spot_seconds": 11,
  "team_art": {
   "1": {

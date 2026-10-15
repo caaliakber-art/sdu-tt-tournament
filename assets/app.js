@@ -496,7 +496,7 @@
     VIEWS.forEach(x => $("view-" + x).hidden = x !== v); $("view-today").hidden = true; $("view-tug").hidden = true;
     document.querySelectorAll(".nav a").forEach(a => { if (a.dataset.view === v) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current") });
   }
-  function renderAll() { if (!FX) return; renderHeader(); renderTop(); renderEvent(); renderTeams(); renderPhotos(); renderAvailability() }
+  function renderAll() { if (!FX) return; renderHeader(); renderTop(); renderEvent(); renderTeams(); renderPhotos(); renderAvailability(); renderToday() }
 
   /* TV slideshow: overview, then each event (group table + knockout), then the team cards. */
   let wake = null, tvSlide = -1, tvDur = 12000;
@@ -518,11 +518,11 @@
   function slides() {
     const list = [{ k: "race", label: "Race for Best Team" }];
     if (cheerOn && TUGALL && TUGALL.rounds.length) list.push({ k: "tugtable", label: "Tug of war table" });
+    const tp0 = todayPending(); if (tp0.lunch.length + tp0.evening.length + todayKo().length) list.push({ k: "today", label: `Match day · ${todayLabel()}` });
     list.push({ k: "overview", label: "Team standings and results" });
     const tm = todayMoments();
     if (tm.length) tm.forEach((m, i) => list.push({ k: "spot", m, label: `Results · ${todayLabel()} · ${i + 1} of ${tm.length}` }));
     else { const m = spotlight(); if (m) list.push({ k: "spot", m, label: "Spotlight" }) }
-    const tp = todayPending(); if (tp.lunch.length + tp.evening.length) list.push({ k: "today", label: `Still to play · ${todayLabel()}` });
     EVENTS.forEach(e => list.push({ k: "event", ev: e.k, label: e.n }));
     list.push({ k: "teams", part: 1, label: "Teams · 1 of 2" }, { k: "teams", part: 2, label: "Teams · 2 of 2" });
     if (cheerOn && TUG && (TUG.active || TUG.done)) list.push({ k: "tug", label: "Tug of war" });   // last, so it never shifts the others
@@ -540,11 +540,57 @@
     const avail = innerHeight - head - bar - 8, need = main.scrollHeight;
     if (need > avail) main.style.zoom = Math.max(.55, avail / need).toFixed(3);
   }
+  /* Match day: today's matches still to play (data/config.json "today": lunch/evening league ids and knockout keys),
+     as head-to-head cards with what's at stake. Shown as a TV slide and on the home page; optional "hype" lines
+     per match in config ("today.hype", keyed by match id or "Format|Round") replace the automatic stake line. */
+  function todayKo() {
+    const keys = todayCfg().knockout || [];
+    return KO.filter(k => keys.includes(`${k.format}|${k.round}`) && !k.winner && k.c1 && k.c2 && k.t1 && k.t2);
+  }
+  function stakeFor(k) {
+    const n = (k.round.match(/(\d+)/) || [])[1];
+    if (/^quarter/i.test(k.round)) {
+      const sf = KO.find(x => x.format === k.format && /^semi/i.test(x.round) && [x.seed1, x.seed2].some(sd => new RegExp(`^QF${n} Winner`, "i").test(sd || "")));
+      let opp = "";
+      if (sf) {
+        const mine = new RegExp(`^QF${n} Winner`, "i").test(sf.seed1 || "") ? 1 : 2, c = mine === 1 ? sf.c2 : sf.c1, sd = mine === 1 ? sf.seed2 : sf.seed1;
+        const qn = ((sd || "").match(/^QF(\d+)/i) || [])[1], feeder = qn && KO.find(x => x.format === k.format && x.round === `Quarterfinal ${qn}` && !x.winner);
+        if (feeder && feeder.c1 && feeder.c2 && !/^tbd$/i.test(feeder.c1)) opp = `the ${feeder.c1} / ${feeder.c2} winner`;
+        else if (c && !/^tbd$/i.test(c)) opp = c;
+      }
+      return `${opp ? `Winner plays ${opp} in the semifinal` : "Winner goes through to the semifinal"} · up to 2 Best Team points on the line`;
+    }
+    if (/^semi/i.test(k.round)) return "Winner goes to the final · up to 2 Best Team points on the line";
+    return "For the title · champions +5 Best Team points, runners-up +3";
+  }
   function renderToday() {
-    const tp = todayPending(), sec = (title, ms) => ms.length ? `<div><h3 class="sec">${title}</h3><ul class="list">${ms.map(m => `<li><span class="meta"><span class="tag">${esc(m.f)}</span>${esc(evName(m.f))}</span>${pairLine(m, null)}</li>`).join("")}</ul></div>` : "";
-    $("todayTitle").textContent = `Still to play · ${todayLabel()}`;
-    $("todaySub").textContent = `${tp.lunch.length + tp.evening.length} matches`;
-    $("todayList").innerHTML = sec("Lunch break", tp.lunch) + sec("Post office hours", tp.evening);
+    const tp = todayPending(), kos = todayKo(), hype = todayCfg().hype || {};
+    const sc = teamScores(), rank = {}, pts = {}; sc.forEach((r, i) => { rank[r.t] = i + 1; pts[r.t] = r.pts });
+    const ord = n => n + (["th", "st", "nd", "rd"][((n % 100) - 20) % 10] || ["th", "st", "nd", "rd"][n % 100] || "th");
+    const capOn = (names, t) => captain(t) && String(names).split(/\s*\+\s*/).some(p => p.trim().toLowerCase() === captain(t).toLowerCase());
+    const tags = (a, b, pa, pb) => {
+      const out = [];
+      if ([rank[a], rank[b]].sort().join() === "1,2") out.push("Top two clash");
+      else if (Math.abs(rank[a] - rank[b]) === 1 && Math.abs(pts[a] - pts[b]) <= 2) out.push("Neck and neck");
+      if (capOn(pa, a) || capOn(pb, b)) out.push("Captain on court");
+      return out.map(x => `<em class="hot">${x}</em>`).join("");
+    };
+    const side = (names, t, cls) => `<div class="vside ${cls}" style="--tc:var(--t${t})"><b class="vpl">${esc(names)}</b>
+        <span class="vtm"><i class="tsw"></i>${esc(teamName(t))}${captain(t) ? ` · Captain ${esc(captain(t))}` : ""}</span>
+        <span class="vpts">${ord(rank[t])} in Best Team · ${pts[t]} pts</span></div>`;
+    const card = (key, tag, title, a, b, pa, pb, stake) => `<article class="vs" style="--ta:var(--t${a});--tb:var(--t${b})">
+        <header><span class="tag">${esc(tag)}</span><span class="vtitle">${esc(title)}</span>${tags(a, b, pa, pb)}</header>
+        <div class="vrow">${side(pa, a, "l")}<i class="vsx">VS</i>${side(pb, b, "r")}</div>
+        <p class="stake">${esc(hype[key] || stake)}</p></article>`;
+    const order = (todayCfg().order || []).map(String), pos = key => { const i = order.indexOf(key); return i < 0 ? 999 : i };   // optional display order
+    const cards = kos.map(k => ({ key: `${k.format}|${k.round}`, html: card(`${k.format}|${k.round}`, koTag(k), `${k.format} · ${k.round}`, k.t1, k.t2, k.c1, k.c2, stakeFor(k)) }))
+      .concat([...tp.lunch, ...tp.evening].map(m => ({ key: String(m.id), html: card(String(m.id), m.f, `${evName(m.f)} · league`, m.a, m.b, nm(m.f, m.a), nm(m.f, m.b), "League match · the win is worth 1 Best Team point") })))
+      .map((c, i) => Object.assign(c, { i })).sort((x, y) => pos(x.key) - pos(y.key) || x.i - y.i).map(c => c.html);
+    const total = cards.length;
+    $("todayTitle").textContent = `Match day · ${todayLabel()}`;
+    $("todaySub").textContent = total ? `${total} match${total > 1 ? "es" : ""} to play · played as players are available` : "";
+    $("todayList").innerHTML = cards.join("");
+    const home = $("mdCard"); if (home) { home.hidden = !total; $("mdTitle").textContent = `Match day · ${todayLabel()}`; $("mdSub").textContent = $("todaySub").textContent; $("mdList").innerHTML = cards.join("") }
   }
   function showSlide(i) {
     if (!EVENTS.length) return;
