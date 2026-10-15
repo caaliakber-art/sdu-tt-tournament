@@ -73,6 +73,8 @@ A **Scan to cheer** QR code sits in the top right corner on every slide, celebra
 
 Cheers are kept in a free Firebase Realtime Database. Its address goes in `cheer_db` in `data/config.json`; leave it empty to switch cheering off. The database rules only allow counters that go up by at most 25 per write (six cheer totals, plus one per team for each tug of war), and nothing about who cheered is stored. The race slide stays on screen longer while cheering is on (`tv_race_seconds`, default 20). The offline copy does not show cheers.
 
+**Fair play.** Taps beyond 15 a second don't count. Machine-like tapping (over 25 a second, perfectly even gaps, or taps sent by a script) benches that phone with a funny message: 30 seconds, then 2 minutes, then 10 minutes, cleared after an hour of fair play. This runs on the phone, so a determined person could bypass it by sending requests directly; a server-side limit needs Firebase sign-in turned on.
+
 The cheer game:
 
 - **Combos.** Fast, steady tapping builds a combo: x2 after 8 quick taps, x3 after 20, ON FIRE x5 after 40. A one-second pause resets it.

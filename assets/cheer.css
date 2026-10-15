@@ -107,3 +107,11 @@ body.tugging .cb-label{background:#F5C451;color:#0F1E2C}
 .trw span:nth-child(3){text-align:center}
 .trw.me{background:var(--zebra);outline:2px solid var(--tc)}
 .smash-cta.pp{box-shadow:0 0 0 3px #F5C451,0 8px 28px rgba(245,196,81,.6)}
+/* Fair play referee */
+.bench{position:fixed;left:50%;top:40%;z-index:45;transform:translate(-50%,-50%);display:grid;justify-items:center;gap:6px;width:min(88vw,360px);padding:22px 22px 18px;border-radius:18px;background:#132A40;color:#fff;text-align:center;box-shadow:0 0 0 4px #E9806E,0 20px 60px rgba(0,0,0,.5);animation:benchin .35s ease-out}
+.bench b{font:800 28px var(--f-display);text-transform:uppercase;color:#F5C451;letter-spacing:.03em}
+.bench span{font-size:16px;line-height:1.35}
+.bench em{margin-top:6px;font:700 15px var(--f-display);font-style:normal;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:99px;background:#E9806E;color:#0F1E2C}
+@keyframes benchin{from{transform:translate(-50%,-50%) scale(.7);opacity:0}}
+.cheer-btn:disabled{filter:grayscale(.8) brightness(.7)}
+@media (prefers-reduced-motion:reduce){.bench{animation:none}}

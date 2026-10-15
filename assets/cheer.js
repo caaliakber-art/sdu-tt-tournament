@@ -98,9 +98,51 @@
       p.style.left = `${x}px`; p.style.top = `${y - 30}px`; fx.appendChild(p); setTimeout(() => p.remove(), 800);
     }
   }
+  /* Fair play referee. Humans manage about 10 to 15 taps a second, never perfectly evenly. Taps above 15 a second don't
+     count; machine-like tapping (over 25 a second, near-identical gaps, or taps sent by a script) benches this phone with a
+     funny note: 30 seconds, then 2 minutes, then 10 minutes. Strikes clear after an hour of fair play. */
+  const BENCH = [30, 120, 600], taps = [];
+  const LINES = [
+    ["Beep boop! 🤖", "The referee spotted robot fingers. Take a breather, human."],
+    ["Faster than light? 🚀", "No thumb on Earth taps that fast. Auto-clicker benched."],
+    ["Nice try, Terminator 🤖", "Your captain is disappointed. Also slightly impressed."],
+    ["Robot detected 🔧", "Cheers are for humans. Your bot can watch from the stands."],
+  ];
+  const benchedUntil = () => Number(store.get("tt_bench_until")) || 0;
+  function strike() {
+    const last = Number(store.get("tt_bench_last")) || 0;
+    let n = Date.now() - last > 3600000 ? 0 : Number(store.get("tt_bench_strikes")) || 0;
+    const secs = BENCH[Math.min(n, BENCH.length - 1)]; n++;
+    store.set("tt_bench_strikes", n); store.set("tt_bench_last", Date.now()); store.set("tt_bench_until", Date.now() + secs * 1000);
+    pending = 0; tugPending = 0; streak = 0; taps.length = 0;              // this burst doesn't count
+    showBench(); try { navigator.vibrate && navigator.vibrate([200, 100, 200]) } catch (_) {}
+  }
+  function showBench() {
+    const box = $("bench"), left = benchedUntil() - Date.now();
+    if (left <= 0) { box.hidden = true; $("cheerBtn").disabled = false; clearInterval(showBench.t); showBench.t = null; return }
+    if (box.hidden) { const l = LINES[(Math.random() * LINES.length) | 0]; $("benchTitle").textContent = l[0]; $("benchMsg").textContent = l[1] }
+    box.hidden = false; $("cheerBtn").disabled = true;
+    $("benchClock").textContent = `Back in ${window.TTCheer.clock(left)}`;
+    if (!showBench.t) showBench.t = setInterval(showBench, 500);
+  }
+  function fairTap(e, now) {
+    if (benchedUntil() > Date.now()) { showBench(); return false }
+    if (e && e.isTrusted === false && !window.TTCheer.demo) { strike(); return false }   // a script, not a finger
+    taps.push(now); while (taps.length && now - taps[0] > 2000) taps.shift();
+    const lastSec = taps.filter(t => now - t <= 1000).length;
+    if (taps.length >= 50) { strike(); return false }                                   // 25+ taps a second for 2 seconds
+    if (taps.length >= 24) {                                                            // perfectly even gaps: a clicker
+      const g = []; for (let i = 1; i < taps.length; i++) g.push(taps[i] - taps[i - 1]);
+      const m = g.reduce((a, b) => a + b, 0) / g.length, sd = Math.sqrt(g.reduce((a, b) => a + (b - m) * (b - m), 0) / g.length);
+      if (m < 120 && sd / m < 0.06) { strike(); return false }
+    }
+    return lastSec <= 15;                                                               // above 15 a second: doesn't count
+  }
+
   function tap(e) {
     if (!team) return;
     const now = performance.now();
+    if (!fairTap(e, now)) return;
     streak = now - lastTap < 450 ? streak + 1 : 1; lastTap = now;
     clearTimeout(comboT); comboT = setTimeout(() => { streak = 0; renderCombo() }, 1000);
     const n = comboOf(streak)[1] * (rushOn ? 2 : 1);
@@ -230,6 +272,7 @@
     setInterval(() => { flush(false); flushTug(false) }, FLUSH_MS);
     tickRush(); setInterval(tickRush, 1000);
     tickTug(); setInterval(tickTug, 1000);
+    if (benchedUntil() > Date.now()) showBench();
     refreshTugTable(); setInterval(refreshTugTable, 60000);
     setInterval(loadCfg, 5 * 60000);                                // picks up new Cheer Rush times without a reload
   }
