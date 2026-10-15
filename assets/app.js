@@ -164,7 +164,7 @@
     if (cheerOn || !db || window.TT_OFFLINE) return;
     cheerOn = true; $("race").classList.add("cheers-on"); $("cheerLink").hidden = false;
     if (isTv()) requestAnimationFrame(fitSlide);
-    loadScript("assets/cheerdb.js").then(() => { window.TTCheer.watch(db, onCheers); tickRush(); setInterval(tickRush, 1000) }).catch(() => {});
+    loadScript("assets/cheerdb.js").then(() => { window.TTCheer.watch(db, onCheers); tickRush(); tickTug(); setInterval(() => { tickRush(); tickTug() }, 1000) }).catch(() => {});
   }
   function onCheers(d) {
     const prev = CHEERS; CHEERS = d || {};
@@ -189,6 +189,51 @@
     }
     document.documentElement.classList.toggle("rushing", on);
     if (on && !was && isTv() && !celBusy) { const i = slides().findIndex(x => x.k === "race"); if (i >= 0) { if (tvSlide !== i) showSlide(i); tvRestart() } }
+  }
+
+  /* Tug of war (data/config.json "tug_of_war"): all six teams pull at once, in pairs, for a few minutes. Taps on cheer.html
+     pull the rope (and count as cheers too). The TV jumps to the ropes, holds them for the pull and shows the result. */
+  let TUG = null, tugKey = "", tugStop = null, TUGT = {};
+  function tickTug() {
+    if (!cheerOn || !window.TTCheer) return;
+    const st = window.TTCheer.tug(CFG.tug_of_war), key = st ? st.key : "", was = !!(TUG && TUG.active);
+    TUG = st;
+    if (key !== tugKey) {
+      if (tugStop) tugStop(); tugStop = null; TUGT = {}; tugKey = key;
+      if (key) tugStop = window.TTCheer.watchPath(String(CFG.cheer_db).trim(), `tug/${key}`, d => { TUGT = d || {}; if (document.documentElement.dataset.slide === "tug") renderTugTv() });
+    }
+    if (!RUSH && TUG && TUG.soon) {                                 // countdown in the top bar, unless a Cheer Rush is using it
+      const bar = $("rushBar"); bar.hidden = false; bar.classList.remove("on");
+      bar.innerHTML = `<b>Tug of war</b><span>starts in</span><i>${window.TTCheer.clock(TUG.startsIn)}</i><span>Every team pulls · scan to join</span>`;
+    }
+    if (!isTv()) return;
+    const onTug = document.documentElement.dataset.slide === "tug";
+    if (TUG && TUG.active && !was && !celBusy) { const i = slides().findIndex(x => x.k === "tug"); if (i >= 0) { showSlide(i); tvRestart() } }
+    else if (onTug) { if (TUG) renderTugTv(); else tvTick() }
+  }
+  function renderTugTv() {
+    if (!TUG) return;
+    const n = t => Number(TUGT[t]) || 0;
+    $("tugTitle").textContent = TUG.active ? "Tug of war!" : TUG.done ? "Tug of war · result" : "Tug of war";
+    $("tugSub").textContent = TUG.active ? "Every team is pulling. Scan the QR code and tap for your team." : TUG.done ? "Well pulled, everyone." : "";
+    $("tugClock").textContent = TUG.active ? `${window.TTCheer.clock(TUG.endsIn)} left` : TUG.done ? "Final" : `in ${window.TTCheer.clock(TUG.startsIn)}`;
+    $("tugClock").classList.toggle("on", !!TUG.active);
+    // Build the rows once per pull, then only move the knots and counts, so the rope slides and the art doesn't flicker.
+    const box = $("tugRows"), sig = TUG.key + JSON.stringify(TUG.pairs);
+    if (box.dataset.sig !== sig) {
+      box.dataset.sig = sig;
+      const side = (t, cls) => `<div class="tteam ${cls}" data-t="${t}" style="--tc:var(--t${t});--tcf:${t === 1 ? "#fff" : "#0F1E2C"}">
+          ${art(t, "run") ? `<img src="${esc(art(t, "run"))}" alt="">` : ""}<span class="tname"><b>${esc(teamName(t))}</b>${captain(t) ? `<small>Captain ${esc(captain(t))}</small>` : ""}<em class="twin">Wins</em></span>
+          <span class="tcount">0</span></div>`;
+      box.innerHTML = TUG.pairs.map(([x, y]) => `<div class="trow" data-a="${x}" data-b="${y}" style="--ta:var(--t${x});--tb:var(--t${y})">${side(x, "a")}
+          <div class="ttrack"><i class="tmid"></i><b class="tknot" style="left:50%"></b></div>${side(y, "b")}</div>`).join("");
+    }
+    box.querySelectorAll(".trow").forEach(row => {
+      const x = Number(row.dataset.a), y = Number(row.dataset.b), a = n(x), b = n(y), done = !!TUG.done && a !== b;
+      row.querySelector(".tteam.a .tcount").textContent = fmtN(a); row.querySelector(".tteam.b .tcount").textContent = fmtN(b);
+      row.querySelector(".tteam.a").classList.toggle("won", done && a > b); row.querySelector(".tteam.b").classList.toggle("won", done && b > a);
+      row.querySelector(".tknot").style.left = `${(50 + window.TTCheer.rope(a, b) * 44).toFixed(1)}%`;
+    });
   }
 
   /* Alerts on the TV when a team's fans pass a milestone (100, 250, 500, 1,000 then every 1,000) or overtake another team. */
@@ -401,7 +446,7 @@
     let v = location.hash.replace("#", "");
     if (v === "tv") { setTv(true); v = "home" }
     if (!VIEWS.includes(v)) v = "home";
-    VIEWS.forEach(x => $("view-" + x).hidden = x !== v); $("view-today").hidden = true;
+    VIEWS.forEach(x => $("view-" + x).hidden = x !== v); $("view-today").hidden = true; $("view-tug").hidden = true;
     document.querySelectorAll(".nav a").forEach(a => { if (a.dataset.view === v) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current") });
   }
   function renderAll() { if (!FX) return; renderHeader(); renderTop(); renderEvent(); renderTeams(); renderPhotos(); renderAvailability() }
@@ -431,9 +476,11 @@
     const tp = todayPending(); if (tp.lunch.length + tp.evening.length) list.push({ k: "today", label: `Still to play · ${todayLabel()}` });
     EVENTS.forEach(e => list.push({ k: "event", ev: e.k, label: e.n }));
     list.push({ k: "teams", part: 1, label: "Teams · 1 of 2" }, { k: "teams", part: 2, label: "Teams · 2 of 2" });
+    if (cheerOn && TUG && (TUG.active || TUG.done)) list.push({ k: "tug", label: "Tug of war" });   // last, so it never shifts the others
     return list;
   }
-  const slideDur = s => s && s.k === "spot" ? Math.max(6, Number(CFG.tv_spot_seconds) || 11) * 1000
+  const slideDur = s => s && s.k === "tug" ? (TUG && TUG.active ? TUG.endsIn + 12000 : Math.max(4000, Math.min(15000, 60000 - ((TUG && TUG.since) || 0))))
+    : s && s.k === "spot" ? Math.max(6, Number(CFG.tv_spot_seconds) || 11) * 1000
     : s && s.k === "race" && cheerOn ? (RUSH && RUSH.active ? Math.max(tvDur, RUSH.endsIn + 800)        // hold the race for the whole Cheer Rush
       : Math.max(tvDur, (Number(CFG.tv_race_seconds) || 20) * 1000)) : tvDur;                              // longer, so people can scan and cheer
   // Shrink the slide to fit the screen whatever the TV's resolution or browser bars.
@@ -455,11 +502,12 @@
     const list = slides(); tvSlide = ((i % list.length) + list.length) % list.length; const s = list[tvSlide];
     document.documentElement.dataset.slide = s.k;
     const mainEl = document.querySelector("main"); mainEl.classList.remove("enter"); void mainEl.offsetWidth; mainEl.classList.add("enter");
-    const view = s.k === "teams" ? "teams" : s.k === "today" ? "today" : "home";
-    VIEWS.forEach(x => $("view-" + x).hidden = x !== view); $("view-today").hidden = view !== "today";
+    const view = s.k === "teams" ? "teams" : s.k === "today" ? "today" : s.k === "tug" ? "tug" : "home";
+    VIEWS.forEach(x => $("view-" + x).hidden = x !== view); $("view-today").hidden = view !== "today"; $("view-tug").hidden = view !== "tug";
     document.documentElement.dataset.part = s.part || "";
     if (s.k === "event") { curEv = s.ev; renderEvent() }
     if (s.k === "today") renderToday();
+    if (s.k === "tug") renderTugTv();
     if (s.k === "race") { replayRace(); pulseQr() }
     if (s.k === "spot") showMoment(s.m, true); else if (spotOn && !celBusy) hideMoment();
     $("tvLabel").textContent = s.label;

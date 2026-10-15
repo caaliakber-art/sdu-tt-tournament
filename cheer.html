@@ -33,10 +33,15 @@
   <section class="card go" id="go" hidden>
     <div class="go-head"><span id="myTeam"></span><button type="button" class="linkbtn" id="change">Change team</button></div>
     <div class="lvl" id="lvl"><span class="lvl-name" id="lvlName">New fan</span><span class="lvl-bar"><b id="lvlBar"></b></span><span class="lvl-next" id="lvlNext"></span></div>
+    <div class="tug" id="tugBox" role="status" hidden>
+      <div class="tug-head"><b id="tugTitle">Tug of war</b><span id="tugClock"></span></div>
+      <div class="rope"><span class="rside" id="tugMe"></span><span class="rtrack"><i class="rmid"></i><b class="rknot" id="tugKnot"></b></span><span class="rside them" id="tugThem"></span></div>
+      <p class="tug-note" id="tugNote"></p>
+    </div>
     <button type="button" class="cheer-btn" id="cheerBtn" aria-describedby="mineTxt">
       <img id="cheerImg" alt="">
       <span class="combo" id="combo"><b id="comboTxt">Tap fast for a combo</b><i><em id="comboBar"></em></i></span>
-      <span class="cb-label">Tap to cheer</span>
+      <span class="cb-label" id="cbLabel">Tap to cheer</span>
     </button>
     <p class="mine" id="mineTxt" aria-live="polite"><span>You: <b id="mine">0</b></span><span>Team total: <b id="teamTotal">0</b></span></p>
   </section>
@@ -48,7 +53,7 @@
     <div class="meter" id="meter"></div>
   </section>
 
-  <p class="note" id="note">Tap fast and steady to build a combo (x2, x3, then ON FIRE x5). During a Cheer Rush every cheer counts double. Cheers are anonymous and do not change team points.</p>
+  <p class="note" id="note">Tap fast and steady to build a combo (x2, x3, then ON FIRE x5). During a Cheer Rush every cheer counts double. In a Tug of war, your taps pull the rope against your rival team. Cheers are anonymous and do not change team points.</p>
 </main>
 
 <footer class="sdufoot">

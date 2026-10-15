@@ -451,3 +451,30 @@ tr.lead td:first-child{box-shadow:inset 4px 0 0 var(--salmon)}
 @keyframes qrpulse{50%{box-shadow:0 0 0 6px var(--neon),0 0 34px 6px rgba(0,246,237,.55)}}
 @media (max-height:820px){.tv .qrdock:not([hidden]){width:290px;gap:10px;padding:6px 12px 6px 6px}.qrbox{width:88px;height:88px;padding:4px}.qrtxt b{font-size:21px}.qrtxt span{font-size:13px}.tv.qr-on .hbtns{margin-right:306px}}
 @media (prefers-reduced-motion:reduce){.tv.qr-on .qrdock.pulse{animation:none}}
+/* TV: Tug of war */
+.tugcard .head{align-items:center}
+.tugcard .sub{font-size:17px}
+.tugclock{font:800 34px var(--f-display);font-variant-numeric:tabular-nums;padding:6px 18px;border-radius:12px;background:var(--tag-bg);color:var(--fg)}
+.tugclock.on{background:#F5C451;color:#0F1E2C}
+.tugs{display:grid;gap:22px;padding:12px 22px 30px}
+.trow{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,2fr) minmax(0,1fr);align-items:center;gap:18px;padding:16px 0;border-top:1px solid var(--rule)}
+.trow:first-child{border-top:0}
+.tteam{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:8px 14px;border-radius:14px;background:color-mix(in srgb,var(--tc) 14%,var(--surface));border-left:6px solid var(--tc)}
+.tteam.b{grid-template-columns:auto minmax(0,1fr) auto;border-left:0;border-right:6px solid var(--tc)}
+.tteam.b img{order:3}.tteam.b .tname{order:2;text-align:right}.tteam.b .tcount{order:1}
+.tteam img{height:130px;width:auto;margin-block:-10px}
+.tteam.a img{transform:scaleX(-1)}
+.tname{display:grid;gap:2px;min-width:0}
+.tname b{font:800 26px var(--f-display);text-transform:uppercase;line-height:1}
+.tname small{font-size:15px;color:var(--muted)}
+.tcount{font:800 56px var(--f-display);font-variant-numeric:tabular-nums}
+.twin{display:none;justify-self:start;font:800 13px var(--f-display);font-style:normal;letter-spacing:.12em;text-transform:uppercase;padding:3px 10px;border-radius:99px;background:var(--tc);color:var(--tcf,#0F1E2C)}
+.tteam.b .twin{justify-self:end}
+.tteam.won .twin{display:block}
+.tteam.won{box-shadow:0 0 0 3px var(--tc),0 0 26px color-mix(in srgb,var(--tc) 60%,transparent)}
+.ttrack{position:relative;height:56px;border-radius:99px;background:linear-gradient(90deg,color-mix(in srgb,var(--ta) 40%,var(--zebra)),var(--zebra) 50%,color-mix(in srgb,var(--tb) 40%,var(--zebra)))}
+.ttrack::before{content:"";position:absolute;left:10px;right:10px;top:50%;height:8px;margin-top:-4px;border-radius:4px;background:repeating-linear-gradient(90deg,#d9b77a 0 9px,#a8844a 9px 13px)}
+.tmid{position:absolute;left:50%;top:4px;bottom:4px;width:3px;margin-left:-1.5px;background:var(--navy);opacity:.5}
+.tknot{position:absolute;top:50%;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:#F5C451;box-shadow:0 0 0 4px var(--navy),0 0 18px #F5C451;transition:left .6s cubic-bezier(.3,1.4,.5,1)}
+@media (max-width:900px){.trow{grid-template-columns:1fr;gap:8px}.tteam img{height:60px}.tcount{font-size:32px}.tname b{font-size:20px}}
+@media (prefers-reduced-motion:reduce){.tknot{transition:none}}

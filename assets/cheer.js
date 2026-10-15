@@ -15,6 +15,7 @@
   const LEVELS = [[0, "New fan"], [50, "Rookie"], [250, "Ultra"], [1000, "Superfan"], [5000, "Legend"]];
   let CFG = {}, DB = "", TEAMS = [], team = null, pending = 0, sending = false, mine = 0, all = 0, totals = {};
   let streak = 0, lastTap = 0, comboT = null, rushOn = false;
+  let TUG = null, tugKey = "", tugStop = null, tugTotals = {}, tugPending = 0, tugPendKey = "", tugSending = false;
 
   const tname = t => (CFG.team_names && CFG.team_names[t]) || `Team ${t}`;
   const cap = t => (CFG.captains && CFG.captains[t]) || "";
@@ -36,7 +37,7 @@
     $("myTeam").innerHTML = `<i class="tsw"></i><b>${esc(tname(t))}</b>${cap(t) ? ` · Captain ${esc(cap(t))}` : ""}`;
     const img = $("cheerImg"); if (run(t)) { img.src = run(t); img.hidden = false } else img.hidden = true;
     mine = Number(store.get(`tt_cheer_mine_${t}`)) || 0;
-    renderMine(); renderMeter(); renderLevel(); renderCombo();
+    renderMine(); renderMeter(); renderLevel(); renderCombo(); renderTug();
   }
   function renderMine() {
     $("mine").textContent = fmt(mine);
@@ -106,12 +107,13 @@
     if (pending + n > MAX_PENDING) return;                        // offline or very slow network: hold back rather than pile up
     const before = levelOf(all);
     pending += n; mine += n; all += n;
+    if (TUG && TUG.active && myPair()) { if (tugPendKey !== TUG.key) tugPending = 0; tugPending = Math.min(MAX_PENDING, tugPending + n); tugPendKey = TUG.key }   // a pull also counts as a cheer
     store.set(`tt_cheer_mine_${team}`, mine); store.set("tt_cheer_all", all);
     const r = $("cheerBtn").getBoundingClientRect();
     burst(e.clientX || r.left + r.width / 2, e.clientY || r.top + r.height / 2, Math.min(2 + n, 7), n);
     const b = $("cheerBtn"); b.classList.remove("hit"); void b.offsetWidth; b.classList.add("hit");
     try { navigator.vibrate && navigator.vibrate(n >= 5 ? 22 : 12) } catch (_) {}
-    renderMine(); renderMeter(); renderCombo(); renderLevel();
+    renderMine(); renderMeter(); renderCombo(); renderLevel(); renderTug();
     const after = levelOf(all); if (after > before) levelUp(after);
   }
   async function flush(keepalive) {
@@ -122,6 +124,51 @@
     sending = false;
     if (ok && pending >= BATCH) setTimeout(() => flush(false), 0);   // a hot streak drains in back-to-back writes
     $("meterSub").textContent = ok ? "Live" : "Reconnecting…";
+  }
+
+  // Tug of war: all six teams pull at once, in pairs. Your taps pull your team's rope; the result shows for a minute after.
+  const myPair = () => TUG && team ? TUG.pairs.find(p => p.includes(team)) : null;
+  async function flushTug(keepalive) {
+    if (tugSending || !tugPending || !tugPendKey || !team || !DB) return;
+    tugSending = true; const n = Math.min(tugPending, BATCH), key = tugPendKey;
+    const ok = await window.TTCheer.addPath(DB, `tug/${key}/${team}`, n, keepalive);
+    if (ok && key === tugPendKey) tugPending -= n; else if (!ok && !(TUG && TUG.key === key)) tugPending = 0;   // give up once the pull is over
+    tugSending = false;
+    if (ok && tugPending >= BATCH) setTimeout(() => flushTug(false), 0);
+  }
+  function tickTug() {
+    const st = window.TTCheer.tug(CFG.tug_of_war), key = st ? st.key : "";
+    const wasActive = !!(TUG && TUG.active); TUG = st;
+    if (key !== tugKey) {
+      if (tugStop) tugStop(); tugStop = null; tugTotals = {}; tugKey = key;
+      if (key && DB) tugStop = window.TTCheer.watchPath(DB, `tug/${key}`, d => { tugTotals = d || {}; renderTug() });
+    }
+    if (TUG && TUG.active && !wasActive && myPair()) try { navigator.vibrate && navigator.vibrate([60, 40, 60]) } catch (_) {}
+    renderTug();
+  }
+  function renderTug() {
+    const box = $("tugBox"), pair = myPair(), pulling = !!(TUG && TUG.active && pair);
+    document.body.classList.toggle("tugging", pulling);
+    $("cbLabel").textContent = pulling ? "Pull!" : "Tap to cheer";
+    if (!pair) { box.hidden = true; return }
+    const rival = pair[0] === team ? pair[1] : pair[0];
+    const a = (Number(tugTotals[team]) || 0) + (tugPendKey === TUG.key ? tugPending : 0), b = Number(tugTotals[rival]) || 0;
+    box.hidden = false; box.dataset.state = TUG.active ? "on" : TUG.done ? "done" : "soon";
+    box.style.setProperty("--ta", `var(--t${team})`); box.style.setProperty("--tb", `var(--t${rival})`);
+    const side = (t, n) => `<i class="tsw" style="background:var(--t${t})"></i><span><b>${esc(tname(t))}</b><em>${fmt(n)}</em></span>`;
+    $("tugMe").innerHTML = side(team, a); $("tugThem").innerHTML = side(rival, b);
+    $("tugKnot").style.left = `${(50 + window.TTCheer.rope(a, b) * 42).toFixed(1)}%`;
+    const gap = Math.abs(a - b);
+    if (TUG.soon) {
+      $("tugTitle").textContent = "Tug of war"; $("tugClock").textContent = `starts in ${window.TTCheer.clock(TUG.startsIn)}`;
+      $("tugNote").textContent = `${tname(team)} v ${tname(rival)}. Get your team's fans together: every tap pulls the rope.`;
+    } else if (TUG.active) {
+      $("tugTitle").textContent = "Tug of war!"; $("tugClock").textContent = `${window.TTCheer.clock(TUG.endsIn)} left`;
+      $("tugNote").textContent = a === b ? "Dead level. Pull!" : a > b ? `You're ahead by ${fmt(gap)}. Hold on!` : `Behind by ${fmt(gap)}. Pull harder!`;
+    } else {
+      $("tugTitle").textContent = a === b ? "It's a draw" : a > b ? "Your team won the pull!" : `${tname(rival)} won this one`;
+      $("tugClock").textContent = "Final"; $("tugNote").textContent = `${tname(team)} ${fmt(a)} · ${tname(rival)} ${fmt(b)}`;
+    }
   }
 
   // Cheer Rush banner and double cheers.
@@ -151,16 +198,17 @@
     window.TTCheer.watch(DB, d => { totals = d || {}; renderMine(); renderMeter() });
     const saved = Number(store.get("tt_cheer_team"));
     if (TEAMS.includes(saved)) choose(saved); else $("pick").hidden = false;
-    setInterval(() => flush(false), FLUSH_MS);
+    setInterval(() => { flush(false); flushTug(false) }, FLUSH_MS);
     tickRush(); setInterval(tickRush, 1000);
+    tickTug(); setInterval(tickTug, 1000);
     setInterval(loadCfg, 5 * 60000);                                // picks up new Cheer Rush times without a reload
   }
 
   document.addEventListener("click", e => { const b = e.target.closest(".pickbtn"); if (b) choose(Number(b.dataset.t)) });
-  $("change").onclick = () => { flush(false); team = null; $("go").hidden = true; $("pick").hidden = false; renderMeter() };
+  $("change").onclick = () => { flush(false); flushTug(false); team = null; $("go").hidden = true; $("pick").hidden = false; renderMeter() };
   $("cheerBtn").addEventListener("pointerdown", tap);
   $("cheerBtn").addEventListener("keydown", e => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); if (!e.repeat) tap(e) } });
   $("cheerBtn").addEventListener("click", e => e.preventDefault());
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flush(true) });
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") { flush(true); flushTug(true) } });
   init();
 })();

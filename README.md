@@ -71,7 +71,7 @@ A **Scan to cheer** QR code sits in the top right corner on every slide, celebra
 
 `cheer.html` (the site address ending in `/cheer.html`) lets anyone in the office pick their team and tap to cheer, from a phone or a desk. Share the link in Teams or by email; the TV race slide also shows a QR code to it. Each lane on the race shows its team's cheer count live, with bursts from the captain as cheers land, and the leading lane is marked "Loudest fans". Cheers never change team points.
 
-Cheers are kept in a free Firebase Realtime Database. Its address goes in `cheer_db` in `data/config.json`; leave it empty to switch cheering off. The database rules only allow six numbers (one per team) that can each go up by at most 25 per write, and nothing about who cheered is stored. The race slide stays on screen longer while cheering is on (`tv_race_seconds`, default 20). The offline copy does not show cheers.
+Cheers are kept in a free Firebase Realtime Database. Its address goes in `cheer_db` in `data/config.json`; leave it empty to switch cheering off. The database rules only allow counters that go up by at most 25 per write (six cheer totals, plus one per team for each tug of war), and nothing about who cheered is stored. The race slide stays on screen longer while cheering is on (`tv_race_seconds`, default 20). The offline copy does not show cheers.
 
 The cheer game:
 
@@ -82,6 +82,37 @@ The cheer game:
 
 ```json
 "cheer_rush": [ { "start": "13:15", "end": "13:20" }, { "start": "18:15", "end": "18:20" } ]
+```
+
+- **Tug of war.** At the times in `tug_of_war`, all six teams pull at once, in three pairs. Each tap on the cheer page pulls that team's rope (and still counts as a cheer). The TV jumps to the three ropes, holds them until the pull ends, then shows the result with the winners for about 15 seconds. Phones show their own rope, the gap to the rival, and a countdown from 10 minutes before. Set the pairs for each pull; pairing teams close in the standings makes the best contests:
+
+```json
+"tug_of_war": [ { "start": "13:20", "end": "13:23", "pairs": [[2, 3], [4, 6], [1, 5]] } ]
+```
+
+**Firebase rules.** In the Firebase console, open Realtime Database, then Rules, replace everything with this and click Publish. It keeps the cheer limits and adds the tug of war counters (one number per team per pull, same +25 limit). Until this is published, pulls do not register, but cheers carry on as before.
+
+```json
+{
+  "rules": {
+    "cheers": {
+      ".read": true,
+      "$team": {
+        ".write": "$team.matches(/^[1-6]$/)",
+        ".validate": "newData.isNumber() && newData.val() > (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 25"
+      }
+    },
+    "tug": {
+      ".read": true,
+      "$round": {
+        "$team": {
+          ".write": "$round.matches(/^[0-9]{8}-[0-9]{4}$/) && $team.matches(/^[1-6]$/)",
+          ".validate": "newData.isNumber() && newData.val() > (data.exists() ? data.val() : 0) && newData.val() <= (data.exists() ? data.val() : 0) + 25"
+        }
+      }
+    }
+  }
+}
 ```
 
 ### Smash (table tennis mini-game)

@@ -74,3 +74,25 @@ body.rushing .cb-label{background:#F5C451;color:#0F1E2C}
 .smash-cta{display:grid;gap:2px;padding:14px 18px;border-radius:14px;text-decoration:none;color:#0F1E2C;background:linear-gradient(90deg,#00F6ED,#F5C451);box-shadow:0 8px 24px rgba(0,246,237,.25)}
 .smash-cta b{font:800 22px var(--f-display);letter-spacing:.08em;text-transform:uppercase}
 .smash-cta span{font-size:14px}
+/* Tug of war */
+.tug{display:grid;gap:10px;padding:14px 14px 12px;border-radius:14px;background:#132A40;color:#fff}
+.tug-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.tug-head b{font:800 22px var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:#F5C451}
+.tug-head span{font:700 18px var(--f-display);font-variant-numeric:tabular-nums}
+.tug[data-state="on"]{box-shadow:0 0 0 3px #F5C451,0 8px 26px rgba(245,196,81,.35)}
+.tug[data-state="on"] .tug-head b{animation:cpulse .5s ease-in-out infinite alternate}
+.rope{display:grid;grid-template-columns:minmax(0,1fr) minmax(90px,1.6fr) minmax(0,1fr);align-items:center;gap:8px}
+.rside{display:flex;align-items:center;gap:6px;min-width:0}
+.rside.them{flex-direction:row-reverse;text-align:right}
+.rside .tsw{flex:none;width:5px;height:30px;border-radius:3px}
+.rside span{display:grid;min-width:0}
+.rside b{font:800 14px var(--f-display);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rside em{font:800 22px var(--f-display);font-style:normal;font-variant-numeric:tabular-nums}
+.rtrack{position:relative;height:30px;border-radius:99px;background:linear-gradient(90deg,color-mix(in srgb,var(--ta) 45%,#132A40),#1d3a55 50%,color-mix(in srgb,var(--tb) 45%,#132A40))}
+.rtrack::before{content:"";position:absolute;left:8px;right:8px;top:50%;height:5px;margin-top:-2.5px;border-radius:3px;background:repeating-linear-gradient(90deg,#d9b77a 0 6px,#a8844a 6px 9px)}
+.rmid{position:absolute;left:50%;top:3px;bottom:3px;width:2px;margin-left:-1px;background:rgba(255,255,255,.5)}
+.rknot{position:absolute;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:#F5C451;box-shadow:0 0 0 3px #132A40,0 0 12px #F5C451;transition:left .35s ease-out}
+.tug-note{margin:0;font-size:14px;color:var(--sky)}
+body.tugging .cheer-btn{box-shadow:0 0 0 4px #F5C451,0 10px 30px rgba(15,30,44,.25)}
+body.tugging .cb-label{background:#F5C451;color:#0F1E2C}
+@media (prefers-reduced-motion:reduce){.tug[data-state="on"] .tug-head b{animation:none}.rknot{transition:none}}
