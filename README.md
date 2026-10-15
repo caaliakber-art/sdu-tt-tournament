@@ -84,10 +84,10 @@ The cheer game:
 "cheer_rush": [ { "start": "13:15", "end": "13:20" }, { "start": "18:15", "end": "18:20" } ]
 ```
 
-- **Tug of war.** At the times in `tug_of_war`, all six teams pull at once, in three pairs. Each tap on the cheer page pulls that team's rope (and still counts as a cheer). The TV jumps to the three ropes, holds them until the pull ends, then shows the result with the winners for about 15 seconds. Phones show their own rope and the gap to the rival. All day before a pull, phones, the website and the TV show "Tug of war today at 1:00 PM"; in the last 10 minutes this turns into a countdown, and the TV pops up a reminder at 10, 5 and 1 minute to go. Set the pairs for each pull; pairing teams close in the standings makes the best contests:
+- **Tug of war.** At the times in `tug_of_war`, all six teams pull at once, in three pairs. Each tap on the cheer page pulls that team's rope (and still counts as a cheer). The TV jumps to the three ropes, holds them until the pull ends, then shows the result with the winners for about 15 seconds. Phones show their own rope and the gap to the rival. All day before a pull, phones, the website and the TV show "Tug of war today at 1:00 PM"; in the last 10 minutes this turns into a countdown, and the TV pops up a reminder at 10, 5 and 1 minute to go. Set the pairs for each pull. The schedule runs a 5-minute pull every hour from 11 AM to 6 PM, with the pairs rotating round robin so each team meets a different rival each time:
 
 ```json
-"tug_of_war": [ { "start": "13:00", "end": "13:03", "pairs": [[2, 3], [4, 6], [1, 5]] } ]
+"tug_of_war": [ { "start": "11:00", "end": "11:05", "pairs": [[1, 6], [2, 5], [3, 4]] }, { "start": "12:00", "end": "12:05", "pairs": [[1, 5], [4, 6], [2, 3]] } ]
 ```
 
 To see it any time, add `?tugdemo` to the address: `.../?tugdemo#tv` on the TV and `.../cheer.html?tugdemo` on a phone run a practice pull with simulated rivals. Nothing is saved.
