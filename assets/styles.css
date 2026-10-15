@@ -400,15 +400,7 @@ tr.lead td:first-child{box-shadow:inset 4px 0 0 var(--salmon)}
 .cheerlinks[hidden]{display:none}
 .cheerlink.alt{background:linear-gradient(90deg,#00F6ED,#F5C451);color:#0F1E2C}
 .cheerlink{align-self:center;text-decoration:none;font:700 14px var(--f-display);letter-spacing:.06em;text-transform:uppercase;padding:9px 16px;border-radius:99px;background:var(--accent);color:var(--on-accent)}
-.cheerqr{align-items:center;gap:14px;max-width:360px}
-.cheerqr #qrSvg{flex:none;background:#fff;border-radius:10px;padding:4px;line-height:0}
-.cheerqr #qrSvg svg{width:100%;height:auto}
-.cheerqr span{font-size:15px;color:var(--muted);line-height:1.3}
-.cheerqr b{display:block;font:800 22px var(--f-display);text-transform:uppercase;color:var(--fg);letter-spacing:.03em}
-.cheerqr{display:none}
-.tv[data-slide="race"] .cheerqr:not([hidden]){display:flex}
 .tv[data-slide="race"] #raceCard .head{align-items:center}
-.tv[data-slide="race"] .cheerqr #qrSvg{width:128px}
 .lfans{display:none}
 .race.cheers-on{--lh:84px}
 .tv[data-slide="race"] .race.cheers-on{--lh:118px}
@@ -445,3 +437,17 @@ tr.lead td:first-child{box-shadow:inset 4px 0 0 var(--salmon)}
 .calert.show{animation:alertin 4.6s cubic-bezier(.2,1.2,.4,1) forwards}
 @keyframes alertin{0%{opacity:0;transform:translate(-50%,40px) scale(.9)}10%{opacity:1;transform:translate(-50%,0) scale(1)}88%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,20px)}}
 @media (prefers-reduced-motion:reduce){.live i{animation:none}.progress b{transition:none}.tvbar b{display:none}.tie.champ::after,main.enter,.celebrate.show .cel-card,.list li.fresh,.cel-rays,.cel-card,.leadtag::after,.mv.up,.tie.done .p.won{animation:none}.cel-name span{opacity:1;transform:none;animation:none}.cel-trophy{stroke-dashoffset:0;animation:none}.celebrate .cel-vs,.celebrate .cel-team,.cel-sets .set{opacity:1;transform:none;transition:none}.celebrate.slammed::before,.celebrate.slammed .cel-score::after{animation:none}.celebrate.show .cel-art,.celebrate.slammed .cel-art{animation:none}.cel-art img,.cel-art figcaption{transition:none}.celebrate.slammed .cel-art img{transform:none}.runner{transition:none}.runner img{animation:none}.rushbar.on,.calert.show{animation:none}}
+/* TV: QR dock, top right on every slide (celebrations included), so anyone walking past can scan and cheer */
+.qrdock{display:none}
+.tv .qrdock:not([hidden]){display:flex;position:fixed;top:8px;right:28px;z-index:22;width:330px;align-items:center;gap:14px;padding:7px 16px 7px 7px;border-radius:14px;background:#132A40;color:#fff;text-decoration:none;box-shadow:0 0 0 3px var(--neon),0 10px 30px rgba(0,0,0,.35)}
+.qrbox{flex:none;width:106px;height:106px;padding:5px;border-radius:9px;background:#fff;line-height:0}
+.qrbox svg{width:100%;height:100%}
+.qrtxt{display:grid;gap:3px;line-height:1.2}
+.qrtxt b{font:800 26px var(--f-display);letter-spacing:.04em;text-transform:uppercase;color:var(--neon)}
+.qrtxt span{font-size:15px;color:#fff}
+.qrtxt em{justify-self:start;margin-top:3px;font:700 12px var(--f-display);font-style:normal;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:99px;background:linear-gradient(90deg,#00F6ED,#F5C451);color:#0F1E2C}
+.tv.qr-on .hbtns{margin-right:350px}
+.tv.qr-on .qrdock.pulse{animation:qrpulse 1.4s ease-in-out 2}
+@keyframes qrpulse{50%{box-shadow:0 0 0 6px var(--neon),0 0 34px 6px rgba(0,246,237,.55)}}
+@media (max-height:820px){.tv .qrdock:not([hidden]){width:290px;gap:10px;padding:6px 12px 6px 6px}.qrbox{width:88px;height:88px;padding:4px}.qrtxt b{font-size:21px}.qrtxt span{font-size:13px}.tv.qr-on .hbtns{margin-right:306px}}
+@media (prefers-reduced-motion:reduce){.tv.qr-on .qrdock.pulse{animation:none}}

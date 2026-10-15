@@ -84,7 +84,8 @@
    "run": "assets/art/bhuvanesh-run.webp"
   }
  },
- "cheer_db": "https://sdu-tt-cheer-default-rtdb.asia-southeast1.firebasedatabase.app",
+ "public_url": "https://caaliakber-art.github.io/sdu-tt-tournament/",
+  "cheer_db": "https://sdu-tt-cheer-default-rtdb.asia-southeast1.firebasedatabase.app",
  "tv_race_seconds": 20,
  "cheer_rush": [
   {

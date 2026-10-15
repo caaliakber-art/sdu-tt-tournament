@@ -65,6 +65,8 @@ Use a laptop or mini PC plugged into the TV by HDMI and open the page in its bro
 
 It loops by itself: the Race for Best Team, team standings and recent results, then each of the 7 events (group table and knockout draw), then the team cards. Each slide shows for 12 seconds (`tv_seconds` in `data/config.json`). New scores appear within a minute. Arrow keys skip slides; Esc exits. When a new score arrives the TV shows a short result banner with confetti, and a final win gets a Champion banner. Click **Chime off** once before entering TV mode to turn on a soft chime for new results (off by default).
 
+A **Scan to cheer** QR code sits in the top right corner on every slide, celebrations included. It opens the cheer page on the public site (`public_url` in `data/config.json`), so it works from the offline copy too. Phones need the internet to cheer.
+
 ### Fan cheers (tap to support your team)
 
 `cheer.html` (the site address ending in `/cheer.html`) lets anyone in the office pick their team and tap to cheer, from a phone or a desk. Share the link in Teams or by email; the TV race slide also shows a QR code to it. Each lane on the race shows its team's cheer count live, with bursts from the captain as cheers land, and the leading lane is marked "Loudest fans". Cheers never change team points.

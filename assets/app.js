@@ -146,16 +146,25 @@
   let CHEERS = null, cheerOn = false;
   const scripts = {};
   const loadScript = src => scripts[src] || (scripts[src] = new Promise((ok, no) => { const el = document.createElement("script"); el.src = src; el.onload = ok; el.onerror = no; document.head.appendChild(el) }));
-  const cheerUrl = () => new URL("cheer.html", location.href).href;
+  // The QR always points at the public site (config "public_url"), so it also works from the offline copy and the preview.
+  const cheerUrl = () => { const pub = String(CFG.public_url || "").trim(); try { return pub ? new URL("cheer.html", pub).href : /^https?:/.test(location.protocol) ? new URL("cheer.html", location.href).href : "" } catch (_) { return "" } };
+  let qrOn = false;
+  function startQr() {
+    const url = cheerUrl(); if (qrOn || !url) return; qrOn = true;
+    const make = () => { try {
+      const q = window.qrcode(0, "M"); q.addData(url); q.make(); $("qrDockSvg").innerHTML = q.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+      const d = $("qrDock"); d.href = url; d.hidden = false; document.documentElement.classList.add("qr-on");
+    } catch (_) { qrOn = false } };
+    window.qrcode ? make() : loadScript("assets/qrcode.js").then(make).catch(() => { qrOn = false });
+  }
+  // Draw the eye to the QR now and then: on the race slide and after each celebration.
+  function pulseQr() { const d = $("qrDock"); if (!d || d.hidden) return; d.classList.remove("pulse"); void d.offsetWidth; d.classList.add("pulse") }
   function startCheers() {
     const db = String(CFG.cheer_db || "").trim();
     if (cheerOn || !db || window.TT_OFFLINE) return;
     cheerOn = true; $("race").classList.add("cheers-on"); $("cheerLink").hidden = false;
     if (isTv()) requestAnimationFrame(fitSlide);
     loadScript("assets/cheerdb.js").then(() => { window.TTCheer.watch(db, onCheers); tickRush(); setInterval(tickRush, 1000) }).catch(() => {});
-    loadScript("assets/qrcode.js").then(() => {
-      try { const q = window.qrcode(0, "M"); q.addData(cheerUrl()); q.make(); $("qrSvg").innerHTML = q.createSvgTag(4, 2); $("cheerQr").hidden = false; if (isTv()) requestAnimationFrame(fitSlide) } catch (_) {}
-    }).catch(() => {});
   }
   function onCheers(d) {
     const prev = CHEERS; CHEERS = d || {};
@@ -451,7 +460,7 @@
     document.documentElement.dataset.part = s.part || "";
     if (s.k === "event") { curEv = s.ev; renderEvent() }
     if (s.k === "today") renderToday();
-    if (s.k === "race") replayRace();
+    if (s.k === "race") { replayRace(); pulseQr() }
     if (s.k === "spot") showMoment(s.m, true); else if (spotOn && !celBusy) hideMoment();
     $("tvLabel").textContent = s.label;
     $("tvDots").innerHTML = list.map((_, j) => `<i class="${j === tvSlide ? "on" : ""}"></i>`).join("");
@@ -684,7 +693,7 @@
       $("live").classList.remove("off");
       newIds.forEach(id => fresh.set(String(id), Date.now()));
       if (first || res.updated !== lastUpdated) renderAll();
-      startCheers();
+      startQr(); startCheers();
       const moments = newKo.map(koMoment).concat(newIds.map(id => MATCHES.find(x => String(x.id) === id)).filter(Boolean).map(leagueMoment));
       if (moments.length) celebrate(moments);
       if (isTv()) { if (first) tvDur = Math.max(5, Number(CFG.tv_seconds) || 12) * 1000; if (tvSlide < 0) { showSlide(0); tvRestart() } else requestAnimationFrame(fitSlide) }

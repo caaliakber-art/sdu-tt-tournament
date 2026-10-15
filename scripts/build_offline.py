@@ -30,6 +30,7 @@ def main():
     css = (ROOT / "assets" / "styles.css").read_text(encoding="utf-8")
     css = re.sub(r"url\(([^)\"']+)\)", lambda m: f"url({data_uri(ROOT / 'assets' / m.group(1))})", css)
     app = (ROOT / "assets" / "app.js").read_text(encoding="utf-8")
+    qr = (ROOT / "assets" / "qrcode.js").read_text(encoding="utf-8")  # the TV QR points at the public site, so it works offline too
 
     data = {}
     for name in ("fixtures", "results", "config", "knockout"):
@@ -47,8 +48,9 @@ def main():
     html = html.replace('<link rel="stylesheet" href="assets/styles.css">', f"<style>\n{css}\n</style>")
     html = html.replace('src="assets/sdu-logo-white.png"', f'src="{data_uri(ROOT / "assets/sdu-logo-white.png")}"')
     html = html.replace('<script src="assets/app.js" defer></script>',
-                        f"<script>window.TT_OFFLINE={blob};</script>\n<script>\n{app.replace('</script', '<\\/script')}\n</script>")
-    left = re.findall(r'(?:src|href)="(?!data:|https?:|#|mailto:|\$\{|cheer\.html|game\.html)[^"]+"', html)
+                        f"<script>window.TT_OFFLINE={blob};</script>\n<script>\n{qr.replace('</script', '<\\/script')}\n</script>\n<script>\n{app.replace('</script', '<\\/script')}\n</script>")
+    markup = re.sub(r"<script>.*?</script>", "", html, flags=re.S)  # check the page itself, not the inlined code
+    left = re.findall(r'(?:src|href)="(?!data:|https?:|#|mailto:|\$\{|cheer\.html|game\.html)[^"]+"', markup)
     if left:
         sys.exit(f"Unpacked references left in the offline file: {left}")
     OUT.parent.mkdir(parents=True, exist_ok=True)
