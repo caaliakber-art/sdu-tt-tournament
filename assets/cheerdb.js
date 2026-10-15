@@ -91,15 +91,18 @@
   }
   /* Tug of war (data/config.json "tug_of_war": [{ "start": "13:20", "end": "13:23", "pairs": [[2, 3], [4, 6], [1, 5]] }]).
      Every team pulls at once, in pairs. Returns { active, endsIn, key, pairs } during a pull, { done, since, key, pairs } for a minute
-     after it ends (the result), { soon, startsIn, key, pairs } in the 10 minutes before, else null. The key names the round in the database. */
+     after it ends (the result), { soon, startsIn, at, key, pairs } in the 10 minutes before, { upcoming, startsIn, at, ... } for a later
+     pull today, else null. The key names the round in the database. */
   const PAIRS = [[1, 2], [3, 4], [5, 6]];
+  const ampm = hm => { const [h, m] = String(hm).split(":").map(Number); return `${(h % 12) || 12}:${String(m || 0).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}` };
+  const until = ms => { const m = Math.max(1, Math.round(ms / 60000)); return m < 60 ? `${m} min` : `${Math.floor(m / 60)} hr${m % 60 ? ` ${m % 60} min` : ""}` };
   function tug(list, now) {
     now = now || new Date();
     if (DEMO) {                                                   // 2.5-minute pull, 30 seconds of result, repeat
       const c = Math.floor((now - DEMO_T0) / 180000), at = (now - DEMO_T0) % 180000, base = { key: `demo-${c}`, pairs: [[2, 3], [4, 6], [1, 5]] };
       return at < 150000 ? Object.assign({ active: true, endsIn: 150000 - at }, base) : Object.assign({ active: false, done: true, since: at - 150000 }, base);
     }
-    let active = null, done = null, soon = null;
+    let active = null, done = null, soon = null, next = null;
     for (const r of Array.isArray(list) ? list : []) {
       if (!r || !r.start || !r.end || (r.date && r.date !== ymd(now))) continue;
       const at = hm => { const [h, m] = String(hm).split(":").map(Number); const d = new Date(now); d.setHours(h, m || 0, 0, 0); return d };
@@ -108,13 +111,14 @@
       const base = { key: `${ymd(now).replace(/-/g, "")}-${String(r.start).replace(":", "").padStart(4, "0")}`, pairs };
       if (now >= s && now < e) active = Object.assign({ active: true, endsIn: e - now }, base);
       else if (now >= e && now - e < 60000) done = Object.assign({ active: false, done: true, since: now - e }, base);
-      else if (now < s && s - now <= 10 * 60000 && (!soon || s - now < soon.startsIn)) soon = Object.assign({ active: false, soon: true, startsIn: s - now }, base);
+      else if (now < s && s - now <= 10 * 60000 && (!soon || s - now < soon.startsIn)) soon = Object.assign({ active: false, soon: true, startsIn: s - now, at: ampm(r.start) }, base);
+      else if (now < s && (!next || s - now < next.startsIn)) next = Object.assign({ active: false, upcoming: true, startsIn: s - now, at: ampm(r.start) }, base);
     }
-    return active || done || soon;
+    return active || done || soon || next;                        // next: a later pull today, announced all day ahead
   }
   // Where the rope's centre sits for a pull of a against b: -1 (fully to a's side) to 1 (fully to b's side).
   const rope = (a, b) => { a = Number(a) || 0; b = Number(b) || 0; return Math.max(-1, Math.min(1, (b - a) / (a + b + 40))) };
   const clock = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` };
 
-  const api = window.TTCheer = { watch, watchPath, add, addPath, rush, tug, rope, clock, owe, settle, owed: owedGet, lastStatus: null, demo: DEMO };
+  const api = window.TTCheer = { watch, watchPath, add, addPath, rush, tug, rope, clock, owe, settle, owed: owedGet, lastStatus: null, demo: DEMO, until };
 })();

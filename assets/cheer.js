@@ -153,13 +153,16 @@
     if (!pair) { box.hidden = true; return }
     const rival = pair[0] === team ? pair[1] : pair[0];
     const a = (Number(tugTotals[team]) || 0) + (tugPendKey === TUG.key ? tugPending : 0), b = Number(tugTotals[rival]) || 0;
-    box.hidden = false; box.dataset.state = TUG.active ? "on" : TUG.done ? "done" : "soon";
+    box.hidden = false; box.dataset.state = TUG.active ? "on" : TUG.done ? "done" : TUG.soon ? "soon" : "upcoming";
     box.style.setProperty("--ta", `var(--t${team})`); box.style.setProperty("--tb", `var(--t${rival})`);
     const side = (t, n) => `<i class="tsw" style="background:var(--t${t})"></i><span><b>${esc(tname(t))}</b><em>${fmt(n)}</em></span>`;
     $("tugMe").innerHTML = side(team, a); $("tugThem").innerHTML = side(rival, b);
     $("tugKnot").style.left = `${(50 + window.TTCheer.rope(a, b) * 42).toFixed(1)}%`;
     const gap = Math.abs(a - b);
-    if (TUG.soon) {
+    if (TUG.upcoming) {
+      $("tugTitle").textContent = `Tug of war at ${TUG.at}`; $("tugClock").textContent = `in ${window.TTCheer.until(TUG.startsIn)}`;
+      $("tugNote").textContent = `${tname(team)} v ${tname(rival)}. Open this page at ${TUG.at} and get your team's fans tapping together.`;
+    } else if (TUG.soon) {
       $("tugTitle").textContent = "Tug of war"; $("tugClock").textContent = `starts in ${window.TTCheer.clock(TUG.startsIn)}`;
       $("tugNote").textContent = `${tname(team)} v ${tname(rival)}. Get your team's fans together: every tap pulls the rope.`;
     } else if (TUG.active) {

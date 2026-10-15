@@ -478,3 +478,9 @@ tr.lead td:first-child{box-shadow:inset 4px 0 0 var(--salmon)}
 .tknot{position:absolute;top:50%;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:#F5C451;box-shadow:0 0 0 4px var(--navy),0 0 18px #F5C451;transition:left .6s cubic-bezier(.3,1.4,.5,1)}
 @media (max-width:900px){.trow{grid-template-columns:1fr;gap:8px}.tteam img{height:60px}.tcount{font-size:32px}.tname b{font-size:20px}}
 @media (prefers-reduced-motion:reduce){.tknot{transition:none}}
+.rushbar.soon{box-shadow:0 0 0 3px #00F6ED,0 10px 30px rgba(0,0,0,.35)}
+.rushbar.soon b{color:#00F6ED}
+.tv.noticebar header.band{padding-top:76px}
+.tv .rushbar{top:10px}
+@media (max-width:1500px){.tv .rushbar{padding:8px 16px;gap:8px;font-size:13px}.tv .rushbar b{font-size:22px}.tv .rushbar i{font-size:24px}.tv.noticebar header.band{padding-top:62px}}
+@media (max-width:1100px){.tv .rushbar span:last-child{display:none}}

@@ -96,3 +96,6 @@ body.rushing .cb-label{background:#F5C451;color:#0F1E2C}
 body.tugging .cheer-btn{box-shadow:0 0 0 4px #F5C451,0 10px 30px rgba(15,30,44,.25)}
 body.tugging .cb-label{background:#F5C451;color:#0F1E2C}
 @media (prefers-reduced-motion:reduce){.tug[data-state="on"] .tug-head b{animation:none}.rknot{transition:none}}
+.tug[data-state="upcoming"] .rope{display:none}
+.tug[data-state="upcoming"] .tug-head b{font-size:19px}
+.tug[data-state="soon"]{box-shadow:0 0 0 3px #00F6ED}

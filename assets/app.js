@@ -202,10 +202,22 @@
       if (tugStop) tugStop(); tugStop = null; TUGT = {}; tugKey = key;
       if (key) tugStop = window.TTCheer.watchPath(String(CFG.cheer_db).trim(), `tug/${key}`, d => { TUGT = d || {}; if (document.documentElement.dataset.slide === "tug") renderTugTv() });
     }
-    if (!RUSH && TUG && TUG.soon) {                                 // countdown in the top bar, unless a Cheer Rush is using it
-      const bar = $("rushBar"); bar.hidden = false; bar.classList.remove("on");
-      bar.innerHTML = `<b>Tug of war</b><span>starts in</span><i>${window.TTCheer.clock(TUG.startsIn)}</i><span>Every team pulls · scan to join</span>`;
+    if (!RUSH && TUG && (TUG.soon || TUG.upcoming)) {               // notice all day in the top bar, countdown in the last 10 minutes
+      const bar = $("rushBar"); bar.hidden = false; bar.classList.remove("on"); bar.classList.toggle("soon", !!TUG.soon);
+      bar.innerHTML = TUG.soon ? `<b>Tug of war</b><span>starts in</span><i>${window.TTCheer.clock(TUG.startsIn)}</i><span>Scan the QR code to join your team</span>`
+        : `<b>Tug of war</b><span>today at</span><i>${TUG.at}</i><span>Every team pulls · be ready on the cheer page</span>`;
+    } else if (!RUSH) $("rushBar").classList.remove("soon");
+    if (TUG && TUG.soon && isTv()) {                                  // pop-ups on the TV at 10, 5 and 1 minute to go
+      const prev = tickTug.prev && tickTug.prev.key === TUG.key ? tickTug.prev.ms : null;
+      const mins = prev == null ? null : [10, 5, 1].find(m => prev > m * 60000 && TUG.startsIn <= m * 60000);
+      tickTug.prev = { key: TUG.key, ms: TUG.startsIn };
+      if (mins) {
+        alertQ.push({ title: mins === 1 ? "Tug of war in 1 minute!" : `Tug of war in ${mins} minutes!`, sub: `${TUG.pairs.map(p => p.map(t => teamName(t)).join(" v ")).join(" · ")} · scan the QR code to pull for your team` });
+        if (!alertBusy) nextAlert();
+      }
     }
+    const strip = !$("rushBar").hidden, root = document.documentElement;   // TV: the bar gets its own strip above the header
+    if (root.classList.contains("noticebar") !== strip) { root.classList.toggle("noticebar", strip); if (isTv()) requestAnimationFrame(fitSlide) }
     if (!isTv()) return;
     const onTug = document.documentElement.dataset.slide === "tug";
     if (TUG && TUG.active && !was && !celBusy) { const i = slides().findIndex(x => x.k === "tug"); if (i >= 0) { showSlide(i); tvRestart() } }
@@ -258,12 +270,12 @@
   function nextAlert() {
     const a = alertQ.shift(), box = $("cAlert"); if (!a) { alertBusy = false; box.hidden = true; return }
     alertBusy = true;
-    box.style.setProperty("--tc", `var(--t${a.t})`);
-    const img = box.querySelector("img"); if (art(a.t, "run")) { img.src = art(a.t, "run"); img.hidden = false } else img.hidden = true;
+    box.style.setProperty("--tc", a.t ? `var(--t${a.t})` : "#F5C451");
+    const img = box.querySelector("img"); if (a.t && art(a.t, "run")) { img.src = art(a.t, "run"); img.hidden = false } else img.hidden = true;
     box.querySelector("b").textContent = a.title; box.querySelector("em").textContent = a.sub;
     box.hidden = false; box.classList.remove("show"); void box.offsetWidth; box.classList.add("show");
-    cheerBurst(a.t, 8);
-    setTimeout(nextAlert, 4600);
+    if (a.t) cheerBurst(a.t, 8);
+    setTimeout(nextAlert, a.t ? 4600 : 7000);
   }
   const fmtN = n => Number(n || 0).toLocaleString("en-IN");
   function renderFans() {
