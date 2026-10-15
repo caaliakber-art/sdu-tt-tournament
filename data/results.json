@@ -1,6 +1,6 @@
 {
- "updated": "2026-10-14T14:56:09Z",
- "scorecard_saved": "2026-10-14T14:55:02Z",
+ "updated": "2026-10-15T15:01:18Z",
+ "scorecard_saved": "2026-10-15T14:58:50Z",
  "first_seen": {
   "1": "2026-10-09T06:56:40Z",
   "2": "2026-10-09T06:56:40Z",
@@ -523,5 +523,8 @@
    21
   ]
  },
- "warnings": []
+ "warnings": [
+  "Men's Singles Semifinal 1: Vidwan is Team 5 in the group stage, Finals sheet says Team 3. Team 5 used.",
+  "Men's Singles Semifinal 2: Sujal is Team 3 in the group stage, Finals sheet says Team 5. Team 3 used."
+ ]
 }

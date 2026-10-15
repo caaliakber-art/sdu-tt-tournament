@@ -96,6 +96,12 @@
     const [m, f] = await Promise.all([tab(id, L.matches.sheet, L.matches.range), tab(id, L.finals.sheet, L.finals.range)]);
     const out = matches(m, fixes || {});
     out.knockout = finals(f, fixes || {});
+    // A knockout competitor keeps their group-stage team (the Finals sheet's team formulas can point at the wrong row).
+    out.knockout.ties.forEach(t => [1, 2].forEach(s => {
+      const name = t[`c${s}`]; if (!name) return;
+      const found = new Set(); t.events.forEach(ev => Object.entries(out.fixtures.roster[ev] || {}).forEach(([team, who]) => { if (who === name) found.add(Number(team)) }));
+      if (found.size === 1) t[`t${s}`] = [...found][0];
+    }));
     return out;
   }
 

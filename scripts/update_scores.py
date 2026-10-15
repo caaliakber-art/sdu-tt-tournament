@@ -71,6 +71,22 @@ def num(v):
         return None
 
 
+def fix_ko_teams(knockout, roster, warnings):
+    """A knockout competitor keeps the team they played for in the group stage. The Finals sheet's team cells are
+    formulas that can point at the wrong row (15 Oct: Sujal shown as Team 5 in the Men's Singles semifinal)."""
+    for t in knockout.get("ties", []):
+        for side in (1, 2):
+            name = t.get(f"c{side}")
+            if not name:
+                continue
+            found = {int(team) for ev in t.get("events", []) for team, who in roster.get(ev, {}).items() if who == name}
+            if len(found) == 1:
+                right = found.pop()
+                if t.get(f"t{side}") != right:
+                    warnings.append(f"{t['format']} {t['round']}: {name} is Team {right} in the group stage, Finals sheet says Team {t.get(f't{side}')}. Team {right} used.")
+                    t[f"t{side}"] = right
+
+
 def read_knockout(wb, warnings, fixes=None):
     """Read the coordinator's Finals sheet: draw, seeds, per-set or per-match scores, winner.
     Returns {"ties": [...]}; empty when the sheet is missing so the site falls back to its own draw."""
@@ -230,6 +246,7 @@ def main():
             played_on[str(mid)] = row[c_date].strftime("%Y-%m-%dT%H:%M:%SZ")
 
     knockout = read_knockout(wb, warnings, fixes)
+    fix_ko_teams(knockout, roster, warnings)
 
     order = [k for k in EVENT_ORDER if k in events] + sorted(k for k in events if k not in EVENT_ORDER)
     fixtures = {
