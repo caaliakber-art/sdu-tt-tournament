@@ -125,6 +125,42 @@
     }
     return active || done || soon || next;                        // next: a later pull today, announced all day ahead
   }
+  /* Tug of war scorecard from every finished pull (GET /tug.json): 2 points a win, 1 a draw, ranked on points, then wins,
+     then total pulls. A team whose fans don't turn up loses that pull. Each pull's pairs come from the schedule entry
+     with the same start time, so keep past pairs unchanged during the tournament. Test pulls (?tugtest) score only there. */
+  const pairsOf = r => (Array.isArray(r && r.pairs) && r.pairs.length ? r.pairs : PAIRS).filter(p => Array.isArray(p) && p.length === 2).map(p => p.map(Number));
+  function fetchTugAll(db) {
+    if (DEMO || !clean(db)) return Promise.resolve({});
+    return fetch(`${clean(db)}/tug.json`, { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(d => d || {}).catch(() => null);
+  }
+  function tugTable(all, list, now) {
+    now = now || new Date(); all = all || {};
+    const cur = tug(list, now), rounds = [];
+    for (const key of Object.keys(all).sort()) {
+      const m = key.match(/^(\d{4})(\d{2})(\d{2})-(\d)(\d{3})$/); if (!m) continue;
+      const isTest = m[4] === "9"; if (isTest !== TEST) continue;
+      let pairs, at, finished;
+      if (isTest) { pairs = [[2, 3], [4, 6], [1, 5]]; at = "Test"; finished = !(cur && cur.key === key && cur.active) }
+      else {
+        const hhmm = m[4] + m[5], entry = (Array.isArray(list) ? list : []).find(r => r && r.start && String(r.start).replace(":", "").padStart(4, "0") === hhmm);
+        if (!entry) continue;
+        const [eh, em] = String(entry.end).split(":").map(Number);
+        pairs = pairsOf(entry); at = ampm(entry.start); finished = now >= new Date(+m[1], +m[2] - 1, +m[3], eh, em || 0);
+      }
+      if (!finished) continue;
+      const d = all[key] || {}, n = t => Number(d[t]) || 0;
+      const res = pairs.map(([a, b]) => ({ a, b, na: n(a), nb: n(b), w: n(a) > n(b) ? a : n(b) > n(a) ? b : 0 })).filter(r => r.na || r.nb);
+      if (res.length) rounds.push({ key, date: `${m[1]}-${m[2]}-${m[3]}`, at, res });
+    }
+    const rows = {};
+    [1, 2, 3, 4, 5, 6].forEach(t => rows[t] = { t, played: 0, w: 0, d: 0, l: 0, pulls: 0, pts: 0 });
+    rounds.forEach(r => r.res.forEach(x => {
+      [[x.a, x.na], [x.b, x.nb]].forEach(([t, v]) => { if (!rows[t]) return; rows[t].played++; rows[t].pulls += v; if (!x.w) { rows[t].d++; rows[t].pts += 1 } else if (x.w === t) { rows[t].w++; rows[t].pts += 2 } else rows[t].l++ });
+    }));
+    const order = Object.values(rows).sort((a, b) => b.pts - a.pts || b.w - a.w || b.pulls - a.pulls || a.t - b.t);
+    return { rows: order, rounds };
+  }
+
   // Where the rope's centre sits for a pull of a against b: -1 (fully to a's side) to 1 (fully to b's side).
   const rope = (a, b) => { a = Number(a) || 0; b = Number(b) || 0; return Math.max(-1, Math.min(1, (b - a) / (a + b + 40))) };
   // In a copy that can't reach the cheer database (the Claude preview), point people to the live site instead.
@@ -142,5 +178,5 @@
   }
   const clock = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` };
 
-  const api = window.TTCheer = { watch, watchPath, add, addPath, rush, tug, rope, clock, owe, settle, owed: owedGet, lastStatus: null, demo: DEMO, test: TEST, until, liveUrl, liveBanner };
+  const api = window.TTCheer = { watch, watchPath, add, addPath, rush, tug, rope, clock, owe, settle, owed: owedGet, lastStatus: null, demo: DEMO, test: TEST, until, liveUrl, liveBanner, fetchTugAll, tugTable };
 })();

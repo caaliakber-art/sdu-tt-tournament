@@ -488,3 +488,23 @@ tr.lead td:first-child{box-shadow:inset 4px 0 0 var(--salmon)}
 .livebanner b{font:800 20px var(--f-display);letter-spacing:.06em;text-transform:uppercase}
 .livebanner span{font-size:15px}
 main.smash .livebanner{position:relative;z-index:5;margin:10px auto 0;max-width:520px}
+/* Tug of war table */
+#tugCard{margin-bottom:18px}
+.tugnext{align-self:center;font:700 14px var(--f-display);letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;border-radius:99px;background:#F5C451;color:#0F1E2C}
+.tugnext:empty{display:none}
+.tuggrid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:8px 24px;padding:0 0 12px}
+.tuglast{padding:0 18px}
+.tuglast .list li{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
+@media (max-width:820px){.tuggrid{grid-template-columns:1fr}}
+.tv #tugCard{display:none}
+.tv[data-slide="tugtable"] #tugCard{display:block;margin:0}
+.tv[data-slide="tugtable"] #topGrid,.tv[data-slide="tugtable"] #evCard{display:none}
+.tv[data-slide="tugtable"] #tugCard .head h2{font-size:30px}
+.tv[data-slide="tugtable"] #tugCard .sub{font-size:18px}
+.tv[data-slide="tugtable"] #tugTbl td{padding:14px 10px;font-size:22px}
+.tv[data-slide="tugtable"] #tugTbl td.big{font-size:30px}
+.tv[data-slide="tugtable"] #tugTbl th{font-size:14px}
+.tv[data-slide="tugtable"] #tugTbl .tname{font-size:24px}
+.tv[data-slide="tugtable"] .tuglast .list li{font-size:20px;padding-block:14px}
+.tv[data-slide="tugtable"] .tugnext{font-size:22px;padding:8px 18px}
+.list li.muted{display:block;color:var(--muted)}

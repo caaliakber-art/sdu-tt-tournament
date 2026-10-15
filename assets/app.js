@@ -173,7 +173,7 @@
     if (cheerOn || !db || window.TT_OFFLINE) return;
     cheerOn = true; $("race").classList.add("cheers-on"); $("cheerLink").hidden = false;
     if (isTv()) requestAnimationFrame(fitSlide);
-    loadScript("assets/cheerdb.js").then(() => { window.TTCheer.watch(db, onCheers); tickRush(); tickTug(); setInterval(() => { tickRush(); tickTug() }, 1000) }).catch(() => {});
+    loadScript("assets/cheerdb.js").then(() => { window.TTCheer.watch(db, onCheers); tickRush(); tickTug(); setInterval(() => { tickRush(); tickTug() }, 1000); refreshTugAll(); setInterval(refreshTugAll, 60000) }).catch(() => {});
   }
   function onCheers(d) {
     const prev = CHEERS; CHEERS = d || {};
@@ -207,6 +207,8 @@
     if (!cheerOn || !window.TTCheer) return;
     const st = window.TTCheer.tug(CFG.tug_of_war), key = st ? st.key : "", was = !!(TUG && TUG.active);
     TUG = st;
+    if (TUG && TUG.done && !tickTug.wasDone) setTimeout(refreshTugAll, 4000);                  // score the pull that just ended
+    tickTug.wasDone = !!(TUG && TUG.done);
     if (key !== tugKey) {
       if (tugStop) tugStop(); tugStop = null; TUGT = {}; tugKey = key;
       if (key) tugStop = window.TTCheer.watchPath(String(CFG.cheer_db).trim(), `tug/${key}`, d => { TUGT = d || {}; if (document.documentElement.dataset.slide === "tug") renderTugTv() });
@@ -232,6 +234,30 @@
     if (TUG && TUG.active && !was && !celBusy) { const i = slides().findIndex(x => x.k === "tug"); if (i >= 0) { showSlide(i); tvRestart() } }
     else if (onTug) { if (TUG) renderTugTv(); else tvTick() }
   }
+  /* Tug of war table: every finished pull, on the home page, its own TV slide and the cheer page. */
+  let TUGALL = null;
+  async function refreshTugAll() {
+    if (!cheerOn || !window.TTCheer) return;
+    const d = await window.TTCheer.fetchTugAll(String(CFG.cheer_db).trim()); if (d == null) return;
+    TUGALL = window.TTCheer.tugTable(d, CFG.tug_of_war); renderTugTable();
+  }
+  function renderTugTable() {
+    const card = $("tugCard"), list = Array.isArray(CFG.tug_of_war) ? CFG.tug_of_war : [];
+    if (!cheerOn || !list.length || !TUGALL) { card.hidden = true; return }
+    card.hidden = false;
+    const ap = hm => { const [h, m] = String(hm).split(":").map(Number); return `${(h % 12) || 12}${m ? ":" + String(m).padStart(2, "0") : ""} ${h < 12 ? "AM" : "PM"}` };
+    $("tugTblSub").textContent = `2 pts a win · 1 a draw · ${list.length > 1 ? `${list.length} pulls a day, ${ap(list[0].start)} to ${ap(list[list.length - 1].start)}` : `daily at ${ap(list[0].start)}`}`;
+    $("tugNext").textContent = TUG && TUG.active ? "Pull on now!" : TUG && (TUG.soon || TUG.upcoming) ? `Next pull ${TUG.at}` : "";
+    const played = TUGALL.rounds.length, rows = TUGALL.rows;
+    const top = rows[0] && rows[0].pts > 0 ? rows[0].pts : -1;
+    $("tugTbl").tBodies[0].innerHTML = !played ? `<tr><td class="l" colspan="7">No pulls yet. ${TUG && TUG.at ? `First pull at ${esc(TUG.at)}.` : ""} Scan the QR code and pull for your team.</td></tr>`
+      : rows.map((r, i) => `<tr class="${r.pts === top ? "lead" : ""}"><td class="rk">${i + 1}</td><td class="l">${teamBlock(r.t)}${r.pts === top && i === 0 ? '<span class="leadtag">Top pullers</span>' : ""}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td>${fmtN(r.pulls)}</td><td class="big">${r.pts}</td></tr>`).join("");
+    const last = TUGALL.rounds[played - 1];
+    $("tugLastTitle").textContent = last ? `Latest pull · ${last.at}` : "Latest pull";
+    $("tugLast").innerHTML = last ? last.res.map(x => `<li><span class="${x.w === x.a ? "won" : ""}">${esc(teamName(x.a))}</span><span class="sc">${fmtN(x.na)}-${fmtN(x.nb)}</span><span class="r ${x.w === x.b ? "won" : ""}">${esc(teamName(x.b))}</span></li>`).join("")
+      : `<li class="muted">Results appear here after each pull.</li>`;
+  }
+
   function renderTugTv() {
     if (!TUG) return;
     const n = t => Number(TUGT[t]) || 0;
@@ -490,7 +516,9 @@
     return { lunch: pick(t.lunch), evening: pick(t.evening) };
   }
   function slides() {
-    const list = [{ k: "race", label: "Race for Best Team" }, { k: "overview", label: "Team standings and results" }];
+    const list = [{ k: "race", label: "Race for Best Team" }];
+    if (cheerOn && TUGALL && TUGALL.rounds.length) list.push({ k: "tugtable", label: "Tug of war table" });
+    list.push({ k: "overview", label: "Team standings and results" });
     const tm = todayMoments();
     if (tm.length) tm.forEach((m, i) => list.push({ k: "spot", m, label: `Results · ${todayLabel()} · ${i + 1} of ${tm.length}` }));
     else { const m = spotlight(); if (m) list.push({ k: "spot", m, label: "Spotlight" }) }

@@ -37,7 +37,7 @@
     $("myTeam").innerHTML = `<i class="tsw"></i><b>${esc(tname(t))}</b>${cap(t) ? ` · Captain ${esc(cap(t))}` : ""}`;
     const img = $("cheerImg"); if (run(t)) { img.src = run(t); img.hidden = false } else img.hidden = true;
     mine = Number(store.get(`tt_cheer_mine_${t}`)) || 0;
-    renderMine(); renderMeter(); renderLevel(); renderCombo(); renderTug();
+    renderMine(); renderMeter(); renderLevel(); renderCombo(); renderTug(); renderTugTable();
   }
   function renderMine() {
     $("mine").textContent = fmt(mine);
@@ -139,6 +139,8 @@
   function tickTug() {
     const st = window.TTCheer.tug(CFG.tug_of_war), key = st ? st.key : "";
     const wasActive = !!(TUG && TUG.active); TUG = st;
+    if (TUG && TUG.done && !tickTug.wasDone) setTimeout(refreshTugTable, 4000);                  // score the pull that just ended
+    tickTug.wasDone = !!(TUG && TUG.done);
     if (key !== tugKey) {
       if (tugStop) tugStop(); tugStop = null; tugTotals = {}; tugKey = key;
       if (key && DB) tugStop = window.TTCheer.watchPath(DB, `tug/${key}`, d => { tugTotals = d || {}; renderTug() });
@@ -172,6 +174,23 @@
       $("tugTitle").textContent = a === b ? "It's a draw" : a > b ? "Your team won the pull!" : `${tname(rival)} won this one`;
       $("tugClock").textContent = "Final"; $("tugNote").textContent = `${tname(team)} ${fmt(a)} · ${tname(rival)} ${fmt(b)}`;
     }
+  }
+
+  // Tug of war table: every finished pull so far, so fans can see their team climb.
+  let tugAll = null;
+  async function refreshTugTable() {
+    if (!DB) return;
+    const d = await window.TTCheer.fetchTugAll(DB); if (d == null) return;
+    tugAll = window.TTCheer.tugTable(d, CFG.tug_of_war); renderTugTable();
+  }
+  function renderTugTable() {
+    const card = $("tugTblCard"); if (!tugAll || !Array.isArray(CFG.tug_of_war) || !CFG.tug_of_war.length) { card.hidden = true; return }
+    card.hidden = false;
+    const played = tugAll.rounds.length;
+    $("tugTblSub").textContent = played ? `${played} pull${played > 1 ? "s" : ""} so far · 2 pts a win · 1 a draw` : "2 pts a win · 1 a draw";
+    $("tugTblRows").innerHTML = !played ? `<p class="note">No pulls yet.${TUG && TUG.at ? ` First pull at ${esc(TUG.at)}.` : ""} Win pulls to climb this table.</p>`
+      : `<div class="trw th"><span>#</span><span>Team</span><span>W-D-L</span><span>Pts</span></div>` + tugAll.rows.map((r, i) => `<div class="trw ${r.t === team ? "me" : ""}" style="--tc:var(--t${r.t})">
+        <span class="rk">${i + 1}</span><span class="mname"><i class="tsw"></i>${esc(tname(r.t))}</span><span>${r.w}-${r.d}-${r.l}</span><b>${r.pts}</b></div>`).join("");
   }
 
   // Cheer Rush banner and double cheers.
@@ -208,6 +227,7 @@
     setInterval(() => { flush(false); flushTug(false) }, FLUSH_MS);
     tickRush(); setInterval(tickRush, 1000);
     tickTug(); setInterval(tickTug, 1000);
+    refreshTugTable(); setInterval(refreshTugTable, 60000);
     setInterval(loadCfg, 5 * 60000);                                // picks up new Cheer Rush times without a reload
   }
 

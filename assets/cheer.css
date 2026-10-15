@@ -99,3 +99,10 @@ body.tugging .cb-label{background:#F5C451;color:#0F1E2C}
 .tug[data-state="upcoming"] .rope{display:none}
 .tug[data-state="upcoming"] .tug-head b{font-size:19px}
 .tug[data-state="soon"]{box-shadow:0 0 0 3px #00F6ED}
+.ttbl{display:grid;gap:2px;padding:0 18px 16px}
+.trw{display:grid;grid-template-columns:28px minmax(0,1fr) 70px 40px;align-items:center;gap:8px;padding:8px 6px;border-radius:8px;font-variant-numeric:tabular-nums}
+.trw.th{font:700 11px var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-block:4px}
+.trw .rk{font:800 16px var(--f-display);text-align:center}
+.trw b{font:800 18px var(--f-display);text-align:right}
+.trw span:nth-child(3){text-align:center}
+.trw.me{background:var(--zebra);outline:2px solid var(--tc)}

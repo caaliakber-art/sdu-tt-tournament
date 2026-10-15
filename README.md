@@ -90,6 +90,8 @@ The cheer game:
 "tug_of_war": [ { "start": "11:00", "end": "11:05", "pairs": [[1, 6], [2, 5], [3, 4]] }, { "start": "12:00", "end": "12:05", "pairs": [[1, 5], [4, 6], [2, 3]] } ]
 ```
 
+**Tug of war table.** Every finished pull scores: 2 points for a win, 1 for a draw, and a team whose fans don't turn up loses that pull. The table (won, drawn, lost, total taps, points) and the latest pull's results show on the home page, as their own TV slide after the race, and on the cheer page with the fan's own team highlighted. It is separate from the Best Team points. Each pull's pairs are read from the schedule entry with the same start time, so don't change the pairs of pulls already played.
+
 To see it any time, add `?tugdemo` to the address: `.../?tugdemo#tv` on the TV and `.../cheer.html?tugdemo` on a phone run a practice pull with simulated rivals. Nothing is saved.
 
 **Firebase rules.** In the Firebase console, open Realtime Database, then Rules, replace everything with this and click Publish. It keeps the cheer limits and adds the tug of war counters (one number per team per pull, same +25 limit). Until this is published, pulls do not register, but cheers carry on as before.
