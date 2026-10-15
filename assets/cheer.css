@@ -115,3 +115,5 @@ body.tugging .cb-label{background:#F5C451;color:#0F1E2C}
 @keyframes benchin{from{transform:translate(-50%,-50%) scale(.7);opacity:0}}
 .cheer-btn:disabled{filter:grayscale(.8) brightness(.7)}
 @media (prefers-reduced-motion:reduce){.bench{animation:none}}
+.pledge{margin:0;padding:12px 16px;border-radius:12px;background:var(--zebra);border-left:4px solid #F5C451;font-size:14px;color:var(--fg)}
+.pledge b{font-family:var(--f-display);letter-spacing:.04em;text-transform:uppercase}

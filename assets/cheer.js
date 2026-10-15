@@ -103,11 +103,12 @@
      funny note: 30 seconds, then 2 minutes, then 10 minutes. No human keeps up 12 taps a second for 20 seconds or 9 a second
      for a minute, so that benches too. Strikes clear after an hour of fair play. */
   const BENCH = [30, 120, 600], taps = [];
-  const LINES = [
-    ["Beep boop! 🤖", "The referee spotted robot fingers. Take a breather, human."],
-    ["Faster than light? 🚀", "No thumb on Earth taps that fast. Auto-clicker benched."],
-    ["Nice try, Terminator 🤖", "Your captain is disappointed. Also slightly impressed."],
-    ["Robot detected 🔧", "Cheers are for humans. Your bot can watch from the stands."],
+  const LINES = [                                                   // fair, open, respectful and dependable: the office values, with a wink
+    ["Beep boop! 🤖", "We're Fair, Open, Respectful and Dependable. Your robot is very dependable. Not so fair."],
+    ["Fair play foul 🟨", "F is for Fair, not for Fake fingers. Take a breather, human."],
+    ["Nice try, Terminator 🤖", "Respect your rivals: real thumbs only. Your captain is disappointed (and slightly impressed)."],
+    ["Robot detected 🔧", "Being Open is a value, so here it is openly: no auto-clickers. Back to the bench."],
+    ["Faster than light? 🚀", "No human thumb taps that fast. Fair play means your own two hands."],
   ];
   const benchedUntil = () => Number(store.get("tt_bench_until")) || 0;
   function strike() {
