@@ -24,6 +24,7 @@
     const apply = msg => {
       try {
         const { path, data } = JSON.parse(msg.data);
+        heard = true;
         if (path === "/") totals = data && typeof data === "object" ? data : {};
         else totals[path.replace(/^\//, "")] = data;
         emit();
@@ -34,6 +35,8 @@
       const get = () => fetch(`${db}/${path}.json`, { cache: "no-store" }).then(r => r.json()).then(d => { totals = d || {}; emit() }).catch(() => {});
       get(); poll = setInterval(get, 5000);
     };
+    let heard = false;
+    fetch(`${db}/${path}.json`, { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(d => { if (!heard && !stopped) { totals = d && typeof d === "object" ? d : {}; emit() } }).catch(() => {});
     try {
       es = new EventSource(`${db}/${path}.json`);
       es.addEventListener("put", apply);
@@ -48,7 +51,7 @@
   const sumTeams = (a, b) => { const o = {}; [1, 2, 3, 4, 5, 6].forEach(t => { const v = (Number((a || {})[t]) || 0) + (Number((b || {})[t]) || 0); if (v) o[t] = v }); return o };
   function watch(db, onTotals) {
     let oldT = null, newT = null;
-    const emit = () => { if (oldT && newT) onTotals(sumTeams(oldT, newT)) };
+    const emit = () => onTotals(sumTeams(oldT, newT));                    // show whatever has arrived; an empty counter may never send an update
     const s1 = watchPath(db, "cheers", d => { oldT = d || {}; emit() }), s2 = watchPath(db, "c", d => { newT = d || {}; emit() });
     return () => { s1(); s2() };
   }
