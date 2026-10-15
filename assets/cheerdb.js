@@ -17,7 +17,7 @@
   // Live totals under a path ("cheers", or "tug/<round>"): calls onTotals({ "1": n, ... }) on every change.
   // Falls back to polling if streaming fails.
   function watchPath(db, path, onTotals) {
-    if (DEMO && path.startsWith("tug/")) { Object.keys(sim).forEach(k => delete sim[k]); simSubs.length = 0; simSubs.push(onTotals); return () => { simSubs.length = 0 } }
+    if (DEMO && /^(tug|tg)\//.test(path)) { Object.keys(sim).forEach(k => delete sim[k]); simSubs.length = 0; simSubs.push(onTotals); return () => { simSubs.length = 0 } }
     db = clean(db); if (!db) return () => {};
     let totals = {}, es = null, poll = null, stopped = false;
     const emit = () => onTotals(Object.assign({}, totals));
@@ -43,12 +43,21 @@
     return () => { stopped = true; if (es) es.close(); if (poll) clearInterval(poll) };
   }
 
-  const watch = (db, onTotals) => watchPath(db, "cheers", onTotals);
+  /* Counters moved on 15 Oct to fresh paths ("c" for cheers, "tg" for tug of war) so tabs running an older page stop counting
+     and pick up the fair-play referee when reloaded. The old "cheers" and "tug" totals are read-only and still count. */
+  const sumTeams = (a, b) => { const o = {}; [1, 2, 3, 4, 5, 6].forEach(t => { const v = (Number((a || {})[t]) || 0) + (Number((b || {})[t]) || 0); if (v) o[t] = v }); return o };
+  function watch(db, onTotals) {
+    let oldT = null, newT = null;
+    const emit = () => { if (oldT && newT) onTotals(sumTeams(oldT, newT)) };
+    const s1 = watchPath(db, "cheers", d => { oldT = d || {}; emit() }), s2 = watchPath(db, "c", d => { newT = d || {}; emit() });
+    return () => { s1(); s2() };
+  }
+  const tugPath = key => `tg/${key}`;
 
   // Add n to a counter ("cheers/<team>" or "tug/<round>/<team>"). Resolves true on success.
   function addPath(db, path, n, keepalive) {
-    if (DEMO) { const m = path.match(/^tug\/[^/]+\/(\d)$/); if (m) sim[m[1]] = (sim[m[1]] || 0) + n; api.lastStatus = 200; return Promise.resolve(true) }
-    if (TEST && !path.startsWith("tug/")) { api.lastStatus = 200; return Promise.resolve(true) }
+    if (DEMO) { const m = path.match(/^(?:tug|tg)\/[^/]+\/(\d)$/); if (m) sim[m[1]] = (sim[m[1]] || 0) + n; api.lastStatus = 200; return Promise.resolve(true) }
+    if (TEST && !/^(tug|tg)\//.test(path)) { api.lastStatus = 200; return Promise.resolve(true) }
     db = clean(db);
     return fetch(`${db}/${path}.json`, {
       method: "PUT", keepalive: !!keepalive,
@@ -77,7 +86,7 @@
     } finally { settling = false }
     return done;
   }
-  const add = (db, team, n, keepalive) => addPath(db, `cheers/${team}`, n, keepalive);
+  const add = (db, team, n, keepalive) => addPath(db, `c/${team}`, n, keepalive);
 
   // Cheer Rush windows (data/config.json "cheer_rush": [{ "start": "13:15", "end": "13:20", "date": optional "YYYY-MM-DD" }]),
   // in the device's local time. Returns { active, endsIn } during a rush, { active: false, startsIn } in the 10 minutes before one, else null.
@@ -131,7 +140,8 @@
   const pairsOf = r => (Array.isArray(r && r.pairs) && r.pairs.length ? r.pairs : PAIRS).filter(p => Array.isArray(p) && p.length === 2).map(p => p.map(Number));
   function fetchTugAll(db) {
     if (DEMO || !clean(db)) return Promise.resolve({});
-    return fetch(`${clean(db)}/tug.json`, { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(d => d || {}).catch(() => null);
+    const get = path => fetch(`${clean(db)}/${path}.json`, { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(d => d || {});
+    return Promise.all([get("tug"), get("tg")]).then(([a, b]) => { const o = {}; new Set([...Object.keys(a), ...Object.keys(b)]).forEach(k => o[k] = sumTeams(a[k], b[k])); return o }).catch(() => null);
   }
   function tugTable(all, list, now) {
     now = now || new Date(); all = all || {};
@@ -178,5 +188,5 @@
   }
   const clock = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` };
 
-  const api = window.TTCheer = { watch, watchPath, add, addPath, rush, tug, rope, clock, owe, settle, owed: owedGet, lastStatus: null, demo: DEMO, test: TEST, until, liveUrl, liveBanner, fetchTugAll, tugTable };
+  const api = window.TTCheer = { watch, watchPath, add, addPath, rush, tug, rope, clock, owe, settle, owed: owedGet, lastStatus: null, demo: DEMO, test: TEST, until, liveUrl, liveBanner, fetchTugAll, tugTable, tugPath };
 })();

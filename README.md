@@ -73,7 +73,7 @@ A **Scan to cheer** QR code sits in the top right corner on every slide, celebra
 
 Cheers are kept in a free Firebase Realtime Database. Its address goes in `cheer_db` in `data/config.json`; leave it empty to switch cheering off. The database rules only allow counters that go up by at most 25 per write (six cheer totals, plus one per team for each tug of war), and nothing about who cheered is stored. The race slide stays on screen longer while cheering is on (`tv_race_seconds`, default 20). The offline copy does not show cheers.
 
-**Fair play.** Taps beyond 15 a second don't count. Machine-like tapping (over 25 a second, perfectly even gaps, or taps sent by a script) benches that phone with a funny message: 30 seconds, then 2 minutes, then 10 minutes, cleared after an hour of fair play. This runs on the phone, so a determined person could bypass it by sending requests directly; a server-side limit needs Firebase sign-in turned on.
+**Fair play.** Taps beyond 15 a second don't count. Machine-like tapping (over 25 a second, perfectly even gaps, taps sent by a script, or more than a human can keep up: 12 a second for 20 seconds or 9 a second for a minute) benches that phone with a funny message: 30 seconds, then 2 minutes, then 10 minutes, cleared after an hour of fair play. This runs on the phone, so a determined person could bypass it by sending requests directly; a server-side limit needs Firebase sign-in turned on.
 
 The cheer game:
 
@@ -95,6 +95,8 @@ The cheer game:
 **Tug of war table.** Every finished pull scores: 2 points for a win, 1 for a draw, and a team whose fans don't turn up loses that pull. The table (won, drawn, lost, total taps, points) and the latest pull's results show on the home page, as their own TV slide after the race, and on the cheer page with the fan's own team highlighted. It is separate from the Best Team points. Each pull's pairs are read from the schedule entry with the same start time, so don't change the pairs of pulls already played.
 
 To see it any time, add `?tugdemo` to the address: `.../?tugdemo#tv` on the TV and `.../cheer.html?tugdemo` on a phone run a practice pull with simulated rivals. Nothing is saved.
+
+**Counters.** Since 15 Oct cheers go to `c/<team>` and tug of war to `tg/<round>/<team>`; the earlier `cheers` and `tug` totals are read-only and still added in. This made every page opened before the fair-play referee stop counting until reloaded.
 
 **Firebase rules.** In the Firebase console, open Realtime Database, then Rules, replace everything with this and click Publish. It keeps the cheer limits and adds the tug of war counters (one number per team per pull, same +25 limit). Until this is published, pulls do not register, but cheers carry on as before.
 

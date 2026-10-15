@@ -100,7 +100,8 @@
   }
   /* Fair play referee. Humans manage about 10 to 15 taps a second, never perfectly evenly. Taps above 15 a second don't
      count; machine-like tapping (over 25 a second, near-identical gaps, or taps sent by a script) benches this phone with a
-     funny note: 30 seconds, then 2 minutes, then 10 minutes. Strikes clear after an hour of fair play. */
+     funny note: 30 seconds, then 2 minutes, then 10 minutes. No human keeps up 12 taps a second for 20 seconds or 9 a second
+     for a minute, so that benches too. Strikes clear after an hour of fair play. */
   const BENCH = [30, 120, 600], taps = [];
   const LINES = [
     ["Beep boop! 🤖", "The referee spotted robot fingers. Take a breather, human."],
@@ -128,11 +129,14 @@
   function fairTap(e, now) {
     if (benchedUntil() > Date.now()) { showBench(); return false }
     if (e && e.isTrusted === false && !window.TTCheer.demo) { strike(); return false }   // a script, not a finger
-    taps.push(now); while (taps.length && now - taps[0] > 2000) taps.shift();
-    const lastSec = taps.filter(t => now - t <= 1000).length;
-    if (taps.length >= 50) { strike(); return false }                                   // 25+ taps a second for 2 seconds
-    if (taps.length >= 24) {                                                            // perfectly even gaps: a clicker
-      const g = []; for (let i = 1; i < taps.length; i++) g.push(taps[i] - taps[i - 1]);
+    taps.push(now); while (taps.length && now - taps[0] > 60000) taps.shift();
+    const inLast = ms => { let n = 0; for (let i = taps.length - 1; i >= 0 && now - taps[i] <= ms; i--) n++; return n };
+    const lastSec = inLast(1000);
+    if (inLast(2000) >= 50) { strike(); return false }                                  // 25+ taps a second for 2 seconds
+    if (inLast(20000) >= 240 || taps.length >= 540) { strike(); return false }          // stamina: 12 a second for 20 s, or 9 a second for a minute
+    const recent = taps.slice(-30);
+    if (recent.length >= 24 && now - recent[0] < 4000) {                                // perfectly even gaps: a clicker
+      const g = []; for (let i = 1; i < recent.length; i++) g.push(recent[i] - recent[i - 1]);
       const m = g.reduce((a, b) => a + b, 0) / g.length, sd = Math.sqrt(g.reduce((a, b) => a + (b - m) * (b - m), 0) / g.length);
       if (m < 120 && sd / m < 0.06) { strike(); return false }
     }
@@ -173,7 +177,7 @@
   async function flushTug(keepalive) {
     if (tugSending || !tugPending || !tugPendKey || !team || !DB) return;
     tugSending = true; const n = Math.min(tugPending, BATCH), key = tugPendKey;
-    const ok = await window.TTCheer.addPath(DB, `tug/${key}/${team}`, n, keepalive);
+    const ok = await window.TTCheer.addPath(DB, `${window.TTCheer.tugPath(key)}/${team}`, n, keepalive);
     if (ok && key === tugPendKey) tugPending -= n; else if (!ok && !(TUG && TUG.key === key)) tugPending = 0;   // give up once the pull is over
     tugSending = false;
     if (ok && tugPending >= BATCH) setTimeout(() => flushTug(false), 0);
@@ -185,7 +189,7 @@
     tickTug.wasDone = !!(TUG && TUG.done);
     if (key !== tugKey) {
       if (tugStop) tugStop(); tugStop = null; tugTotals = {}; tugKey = key;
-      if (key && DB) tugStop = window.TTCheer.watchPath(DB, `tug/${key}`, d => { tugTotals = d || {}; renderTug() });
+      if (key && DB) tugStop = window.TTCheer.watchPath(DB, window.TTCheer.tugPath(key), d => { tugTotals = d || {}; renderTug() });
     }
     if (TUG && TUG.active && !wasActive && myPair()) try { navigator.vibrate && navigator.vibrate([60, 40, 60]) } catch (_) {}
     renderTug();

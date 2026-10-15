@@ -291,7 +291,7 @@
     }
     let pulled = 0;
     if (pp && sent) {                                             // Power Play: the same points pull the rope
-      while (pulled < sent) { const n = Math.min(25, sent - pulled); if (!(await window.TTCheer.addPath(DB, `tug/${pp.key}/${team}`, n))) break; pulled += n }
+      while (pulled < sent) { const n = Math.min(25, sent - pulled); if (!(await window.TTCheer.addPath(DB, `${window.TTCheer.tugPath(pp.key)}/${team}`, n))) break; pulled += n }
     }
     const left = cheers - sent;
     if (left) window.TTCheer.owe(team, left);                     // kept on this phone and sent on the next game or cheer page visit

@@ -211,7 +211,7 @@
     tickTug.wasDone = !!(TUG && TUG.done);
     if (key !== tugKey) {
       if (tugStop) tugStop(); tugStop = null; TUGT = {}; tugKey = key;
-      if (key) tugStop = window.TTCheer.watchPath(String(CFG.cheer_db).trim(), `tug/${key}`, d => { TUGT = d || {}; if (document.documentElement.dataset.slide === "tug") renderTugTv() });
+      if (key) tugStop = window.TTCheer.watchPath(String(CFG.cheer_db).trim(), window.TTCheer.tugPath(key), d => { TUGT = d || {}; if (document.documentElement.dataset.slide === "tug") renderTugTv() });
     }
     if (!RUSH && TUG && (TUG.soon || TUG.upcoming)) {               // notice all day in the top bar, countdown in the last 10 minutes
       const bar = $("rushBar"); bar.hidden = false; bar.classList.remove("on"); bar.classList.toggle("soon", !!TUG.soon);
