@@ -212,6 +212,32 @@
     $("time").classList.toggle("low", timeLeft <= 10);
   }
 
+  /* Power Play (data/config.json "smash_boost": { "from": "13:00", "multiplier": 3 }): during each tug of war pull from that
+     time on, Smash points count several times over and also pull your team's rope. A game counts as Power Play if a pull
+     was running when it started or when it ended. */
+  let powerAtStart = null;
+  const hhmm = d => `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  function power(now) {
+    const T = window.TTCheer, b = CFG.smash_boost; if (!T || !b) return null;
+    now = now || new Date();
+    const st = T.tug(CFG.tug_of_war, now), mult = Math.max(2, Number(b.multiplier) || 3), from = String(b.from || "00:00").padStart(5, "0");
+    if (st && st.active && (T.test || hhmm(now) >= from)) return { active: true, mult, key: st.key, endsIn: st.endsIn };
+    if (st && (st.soon || st.upcoming) && (T.test || hhmm(new Date(+now + st.startsIn)) >= from)) return { active: false, mult, at: st.at, startsIn: st.startsIn };
+    if (st && st.done && !T.test) {                                // between pulls: look ahead to the next one
+      const later = T.tug(CFG.tug_of_war, new Date(+now + 61000));
+      if (later && (later.soon || later.upcoming) && hhmm(new Date(+now + 61000 + later.startsIn)) >= from) return { active: false, mult, at: later.at, startsIn: later.startsIn + 61000 };
+    }
+    return null;
+  }
+  function renderPower() {
+    const p = power(), box = $("powerBox"), hud = $("hudPower");
+    hud.hidden = !(p && p.active); hud.textContent = p ? `x${p.mult}` : "";
+    if (!p) { box.hidden = true; return }
+    box.hidden = false; box.classList.toggle("on", p.active);
+    box.innerHTML = p.active ? `<b>Power Play!</b><span>Points count x${p.mult} and pull your team's rope · ${window.TTCheer.clock(p.endsIn)} left</span>`
+      : `<b>Power Play at ${esc(p.at)}</b><span>During the tug of war, Smash points count x${p.mult} and pull your rope</span>`;
+  }
+
   // ---------- screens ----------
   function show(id) { ["ovPick", "ovStart", "ovEnd"].forEach(x => $(x).hidden = x !== id) }
   function pick() {
@@ -227,6 +253,7 @@
     state = "idle"; reset(); draw(); show("ovStart");
   }
   function start() {
+    const p = power(); powerAtStart = p && p.active ? p : null;
     show(null); state = "play"; reset(); last = performance.now();
     cancelAnimationFrame(raf); raf = requestAnimationFrame(loop);
   }
@@ -244,7 +271,9 @@
     beep(win ? 1046 : 330, .3, .06);
     // Points become cheers for the team (doubled during a Cheer Rush, capped per game).
     const rush = window.TTCheer && window.TTCheer.rush(CFG.cheer_rush);
-    let cheers = Math.min(MAX_CHEERS * (rush && rush.active ? 2 : 1), score * (rush && rush.active ? 2 : 1));
+    const pEnd = power(), pp = pEnd && pEnd.active ? pEnd : powerAtStart;                  // Power Play beats Cheer Rush; they don't stack
+    const mult = pp ? pp.mult : rush && rush.active ? 2 : 1;
+    let cheers = Math.min(MAX_CHEERS * mult, score * mult);
     const el = $("endCheers");
     if (!cheers) { el.textContent = ""; return }
     if (!DB || !window.TTCheer) { el.textContent = "Cheering isn't open yet, so this score wasn't counted."; return }
@@ -260,10 +289,14 @@
       store.set(`tt_cheer_mine_${team}`, (Number(store.get(`tt_cheer_mine_${team}`)) || 0) + sent);
       store.set("tt_cheer_all", (Number(store.get("tt_cheer_all")) || 0) + sent);
     }
+    let pulled = 0;
+    if (pp && sent) {                                             // Power Play: the same points pull the rope
+      while (pulled < sent) { const n = Math.min(25, sent - pulled); if (!(await window.TTCheer.addPath(DB, `tug/${pp.key}/${team}`, n))) break; pulled += n }
+    }
     const left = cheers - sent;
     if (left) window.TTCheer.owe(team, left);                     // kept on this phone and sent on the next game or cheer page visit
     const refused = [401, 403].includes(window.TTCheer.lastStatus);
-    el.textContent = !left ? `+${sent} cheers for ${tname(team)}${rush && rush.active ? " (Cheer Rush double!)" : ""}`
+    el.textContent = !left ? `+${sent} cheers for ${tname(team)}${pp ? ` (Power Play x${pp.mult}${pulled ? `, +${pulled} on the rope` : ""})` : rush && rush.active ? " (Cheer Rush double!)" : ""}`
       : `${sent ? `+${sent} sent. ` : ""}${refused ? "Cheer meter not taking scores yet" : "No connection"}. ${left} cheers saved on this phone; they'll go through later.`;
     el.classList.toggle("warn", left > 0);
   }
@@ -293,6 +326,7 @@
     TEAMS = Object.keys(CFG.captains || CFG.team_names || { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1 }).map(Number).sort((a, b) => a - b);
     size();
     if (DB && window.TTCheer) window.TTCheer.settle(DB);
+    renderPower(); setInterval(renderPower, 1000);
     const saved = Number(store.get("tt_cheer_team"));
     if (TEAMS.includes(saved)) { team = saved; startScreen() } else pick();
   }

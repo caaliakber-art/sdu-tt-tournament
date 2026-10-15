@@ -152,6 +152,9 @@
     const box = $("tugBox"), pair = myPair(), pulling = !!(TUG && TUG.active && pair);
     document.body.classList.toggle("tugging", pulling);
     $("cbLabel").textContent = pulling ? "Pull!" : "Tap to cheer";
+    const cta = document.querySelector(".smash-cta span"), sb = CFG.smash_boost;           // Power Play: advertise Smash during a pull
+    if (cta) { const on = TUG && TUG.active && sb && (window.TTCheer.test || String(sb.from || "00:00").padStart(5, "0") <= `${String(new Date().getHours()).padStart(2, "0")}:${String(new Date().getMinutes()).padStart(2, "0")}`);
+      cta.textContent = on ? `Power Play now: Smash points count x${Math.max(2, Number(sb.multiplier) || 3)} and pull your rope.` : "Hit targets in a one-minute table tennis game. Every point becomes a cheer."; cta.parentElement.classList.toggle("pp", !!on) }
     if (!pair) { box.hidden = true; return }
     const rival = pair[0] === team ? pair[1] : pair[0];
     const a = (Number(tugTotals[team]) || 0) + (tugPendKey === TUG.key ? tugPending : 0), b = Number(tugTotals[rival]) || 0;

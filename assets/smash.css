@@ -55,3 +55,18 @@ main.smash{max-width:560px;margin:0 auto;padding:12px 16px 24px;display:grid;gap
 .end-cheers{max-width:320px;line-height:1.3}
 .end-cheers.warn{font:500 14px var(--f-body);color:#F5C451}
 @media (max-height:760px),(max-width:420px){#endImg{width:130px;height:130px}#ovEnd .end-score b{font-size:60px}}
+/* Power Play */
+.power{display:grid;gap:2px;padding:10px 16px;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid rgba(245,196,81,.6);max-width:380px}
+.power b{font:800 18px var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:#F5C451}
+.power span{font-size:14px;color:#E6EEF2}
+.power.on{background:linear-gradient(90deg,#E9806E,#F5C451);border:0;box-shadow:0 0 24px rgba(245,196,81,.55);animation:pwr .6s ease-in-out infinite alternate}
+.power.on b,.power.on span{color:#0F1E2C}
+@keyframes pwr{to{transform:scale(1.04)}}
+.hud-power{font:800 16px var(--f-display);padding:2px 10px;border-radius:99px;background:#F5C451;color:#0F1E2C}
+.hud-power[hidden]{display:none}
+@media (prefers-reduced-motion:reduce){.power.on{animation:none}}
+.hud{grid-template-columns:1fr repeat(5,auto)}
+.hud-power{font-size:13px;padding:2px 8px;flex:none}
+#ovStart{align-content:safe center;overflow-y:auto;gap:8px}
+#ovStart .rules{margin-block:0}
+@media (max-width:420px){#ovStart .rules li{font-size:13px}#startImg{height:110px}}

@@ -262,7 +262,8 @@
     if (!TUG) return;
     const n = t => Number(TUGT[t]) || 0;
     $("tugTitle").textContent = window.TTCheer.demo ? "Tug of war · practice" : window.TTCheer.test && TUG.active ? "Tug of war · test" : TUG.active ? "Tug of war!" : TUG.done ? "Tug of war · result" : "Tug of war";
-    $("tugSub").textContent = TUG.active ? "Every team is pulling. Scan the QR code and tap for your team." : TUG.done ? "Well pulled, everyone." : "";
+    const pwr = CFG.smash_boost && (window.TTCheer.test || String(CFG.smash_boost.from || "00:00").padStart(5, "0") <= `${String(new Date().getHours()).padStart(2, "0")}:${String(new Date().getMinutes()).padStart(2, "0")}`);
+    $("tugSub").textContent = TUG.active ? `Every team is pulling. Scan the QR code and tap for your team.${pwr ? ` Power Play: Smash points count x${Math.max(2, Number(CFG.smash_boost.multiplier) || 3)} and pull the rope.` : ""}` : TUG.done ? "Well pulled, everyone." : "";
     $("tugClock").textContent = TUG.active ? `${window.TTCheer.clock(TUG.endsIn)} left` : TUG.done ? "Final" : `in ${window.TTCheer.clock(TUG.startsIn)}`;
     $("tugClock").classList.toggle("on", !!TUG.active);
     // Build the rows once per pull, then only move the knots and counts, so the rope slides and the art doesn't flicker.

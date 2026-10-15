@@ -106,3 +106,4 @@ body.tugging .cb-label{background:#F5C451;color:#0F1E2C}
 .trw b{font:800 18px var(--f-display);text-align:right}
 .trw span:nth-child(3){text-align:center}
 .trw.me{background:var(--zebra);outline:2px solid var(--tc)}
+.smash-cta.pp{box-shadow:0 0 0 3px #F5C451,0 8px 28px rgba(245,196,81,.6)}

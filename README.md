@@ -125,6 +125,8 @@ To see it any time, add `?tugdemo` to the address: `.../?tugdemo#tv` on the TV a
 
 If a score can't be sent (no signal, or the database refuses it), the cheers are saved on that phone and sent automatically the next time the person plays or opens the cheer page.
 
+**Power Play.** From the time in `smash_boost` (`{"from": "13:00", "multiplier": 3}`), during every tug of war pull Smash points count three times over and the same points also pull the player's team rope. A game counts if a pull was running when it started or ended. Power Play replaces the Cheer Rush double rather than stacking with it. The Smash start screen shows the next Power Play time, and the cheer page highlights the Smash button while one is on.
+
 ### Offline copy (no internet at the TV)
 
 Every publish also produces `tt-offline.html` (download it from `https://caaliakber-art.github.io/sdu-tt-tournament/tt-offline.html`, or run `python scripts/build_offline.py`). It is the whole site in one file: copy it to the TV laptop or a pen drive, double-click it, and click **TV mode**. It needs no internet, but its scores are frozen at the time it was made, so download a fresh copy after each scorecard update. The status chip reads "Offline copy" so nobody mistakes it for the live page.
